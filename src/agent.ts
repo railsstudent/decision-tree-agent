@@ -1,28 +1,69 @@
-import { FunctionTool, LlmAgent } from '@google/adk';
+import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
+import { createAuditAndReportAgent } from './sub-agents/audit-and-report-agent.js';
+import { createMergerAgent } from './sub-agents/merger-agent.js';
+import { ANTI_PATTERNS_KEY, DECISION_KEY, INTENT_KEY, REPORT_KEY } from './sub-agents/output_keys.js';
 
 process.loadEnvFile();
 
-/* Mock tool implementation */
-const getCurrentTime = new FunctionTool({
-    name: 'get_current_time',
-    description: 'Returns the current time in a specified city.',
-    parameters: z.object({
-        city: z.string().describe('The name of the city for which to retrieve the current time.'),
-    }),
-    execute: ({ city }) => {
-        return {
-            status: 'success',
-            report: `The current time in ${city} is 10:30 AM`,
-        };
+const model = process.env.GEMINI_MODEL_NAME || '';
+if (!model) {
+    throw new Error('GEMINI_MODEL_NAME is not set');
+}
+
+const injectStateTool = new FunctionTool({
+    name: 'inject_test_state',
+    description: 'Injects mock data into the session state for testing.',
+    parameters: z.object({}),
+    execute: async (_, context) => {
+        if (!context) {
+            return;
+        }
+
+        // We write directly to the session state that the downstream agents expect
+        context?.state.set(INTENT_KEY, {
+            task: 'test query',
+            goal: 'test',
+            problem: 'my problem',
+            constraint: 'my constraint',
+        });
+        context?.state.set(ANTI_PATTERNS_KEY, {
+            isChatbot: true,
+            isSingleAPI: false,
+            isHighVolume: false,
+            isWorkflow: false,
+            isSafetyCritical: false,
+        });
+        context?.state.set(DECISION_KEY, 'Approved mock decision');
+        context?.state.set(REPORT_KEY, 'Final mock recommendation report text.');
+
+        return { status: 'Mock data injected successfully.' };
     },
 });
 
+const betterMockSetupAgent = new LlmAgent({
+    name: 'SetupAgent',
+    model,
+    instruction: `You are a test setup agent. You must call the 'inject_test_state' tool immediately, then say
+    'Setup complete'.`,
+    tools: [injectStateTool],
+});
+
+export const SequentialEvaluationAgent = new SequentialAgent({
+    name: 'SequentialEvaluationAgent',
+    subAgents: [betterMockSetupAgent, createAuditAndReportAgent(model), createMergerAgent(model)],
+    description: `Runs agents sequentially to establish the intent of the project,
+     detect any anti-patterns, make a descision, write a recommendation report, 
+     audit the values to reach the descision, upload the report to code, and merge the results to a JSON object
+    `,
+});
+
 export const rootAgent = new LlmAgent({
-    name: 'hello_time_agent',
-    model: 'gemini-2.5-flash',
-    description: 'Tells the current time in a specified city.',
-    instruction: `You are a helpful assistant that tells the current time in a city.
-                Use the 'getCurrentTime' tool for this purpose.`,
-    tools: [getCurrentTime],
+    name: 'project_evaluation_agent',
+    model,
+    description: 'The orchestrator agent for the project evaluation.',
+    instruction: `1. Immediately run the 'SequentialEvaluationAgent' agent to gather the output from the subagents. Do not ask the user for input.
+    2. Return the final result in JSON format.
+    `,
+    subAgents: [SequentialEvaluationAgent],
 });
