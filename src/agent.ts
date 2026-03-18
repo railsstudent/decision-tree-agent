@@ -35,7 +35,7 @@ const injectStateTool = new FunctionTool({
             isSafetyCritical: false,
         });
         context?.state.set(DECISION_KEY, 'Approved mock decision');
-        context?.state.set(REPORT_KEY, 'Final mock recommendation report text.');
+        context?.state.set(REPORT_KEY, { text: 'Final mock recommendation report text.' });
 
         return { status: 'Mock data injected successfully.' };
     },

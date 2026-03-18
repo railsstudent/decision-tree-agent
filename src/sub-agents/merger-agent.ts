@@ -2,6 +2,7 @@ import { FunctionTool, LlmAgent } from '@google/adk';
 import { z } from 'zod';
 import { AUDIT_TRAIL_KEY, CLOUD_STORAGE_KEY, MERGED_RESULTS_KEY, REPORT_KEY } from './output_keys.js';
 import { auditTrailSchema, cloudStorageSchema } from './types/merger.type.js';
+import { RecommendationReport } from './types/recommendation-report.type.js';
 
 export const mergerTool = new FunctionTool({
     name: 'merge_results',
@@ -24,11 +25,11 @@ export const mergerTool = new FunctionTool({
         }
         const auditTrail = context?.state.get(AUDIT_TRAIL_KEY);
         const cloudStorage = context?.state.get(CLOUD_STORAGE_KEY);
-        const report = context?.state.get(REPORT_KEY);
+        const report = context?.state.get<RecommendationReport>(REPORT_KEY, { text: '' });
 
         const result = {
             auditTrail,
-            report,
+            report: report?.text,
             cloudStorage,
             timestamp,
         };
