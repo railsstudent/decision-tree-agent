@@ -5,7 +5,8 @@ import { auditTrailSchema, cloudStorageSchema } from './types/merger.type.js';
 
 export const mergerTool = new FunctionTool({
     name: 'merge_results',
-    description: 'Audit the user intent, anti-patterns and decision of the evaluation',
+    description: `Retrieves the previously generated audit trail, cloud storage details, and evaluation report from
+     the current session state.`,
     execute: async (_, context) => {
         const timestamp = await new Promise<string>((resolve) =>
             setTimeout(() => resolve(new Date(Date.now()).toISOString()), 1000),
@@ -29,6 +30,7 @@ export const mergerTool = new FunctionTool({
             auditTrail,
             report,
             cloudStorage,
+            timestamp,
         };
 
         console.log('merge_results result', result);
@@ -40,15 +42,19 @@ export function createMergerAgent(model: string) {
     return new LlmAgent({
         name: 'MergerAgent',
         model,
-        description: `You are a merger agent. Extract the data from the session state, combine them and return the final JSON object matching the requested schema`,
+        description: `You are an aggregator agent. Your role is to collect the final evaluation results from
+      previous steps and format them into a single, cohesive JSON response.`,
         instruction: `
-            You MUST call the 'merge_results' tool.
-            Do NOT generate the final output without first calling the 'merge_results' tool and waiting for its response. Use the tool's result property to formulate your final JSON output.
+            Your strict requirement is to call the 'merge_results' tool to retrieve the necessary data.
+            Do NOT attempt to guess or generate the output yourself.
+            Once you receive the response from the 'merge_results' tool, map its properties ('auditTrail', 'report',
+      and 'cloudStorage') directly to your final JSON output schema without modifying their content.
         `,
         outputSchema: z.object({
             auditTrail: auditTrailSchema.nullable(),
             report: z.string(),
             cloudStorage: cloudStorageSchema.nullable(),
+            timestamp: z.string(),
         }),
         outputKey: MERGED_RESULTS_KEY,
         tools: [mergerTool],
