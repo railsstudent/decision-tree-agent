@@ -69,7 +69,6 @@ instruction: \`
 
 1. Open `src/sub-agents/recommendation-report-agent.ts`.
 2. Replace the current `description` and `instruction` strings.
-3. Remove all references to the `write_audit_trail` tool.
 
 ## Verification
 
