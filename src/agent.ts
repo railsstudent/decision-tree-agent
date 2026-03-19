@@ -1,7 +1,6 @@
 import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
-import { createAuditAndReportAgent } from './sub-agents/audit-and-report-agent.js';
-import { createMergerAgent } from './sub-agents/merger-agent.js';
+import { createAuditAndReportAgent, createMergerAgent } from './sub-agents/audit-and-report-agent.js';
 import { ANTI_PATTERNS_KEY, DECISION_KEY, INTENT_KEY, REPORT_KEY } from './sub-agents/output_keys.js';
 
 process.loadEnvFile();
