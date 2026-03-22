@@ -14,12 +14,12 @@ const auditTrailTool = new FunctionTool({
         );
         console.log('write_audit_trail timestamp', timestamp);
 
-        const { intent, antiPatterns, decision } = getEvaluationContext(context);
-        const status = intent && antiPatterns && decision ? 'success' : 'error';
+        const { project, antiPatterns, decision } = getEvaluationContext(context);
+        const status = project && antiPatterns && decision ? 'success' : 'error';
         const result = {
             status,
             timestamp,
-            intent,
+            project,
             antiPatterns,
             decision,
         };
@@ -62,7 +62,7 @@ export function createAuditAndUploadAgents(model: string) {
         description:
             'Specialized agent responsible for validating and formatting the audit trail data before persistence.',
         instruction: async (context) => {
-            const { intent, antiPatterns, decision } = getEvaluationContext(context);
+            const { project: intent, antiPatterns, decision } = getEvaluationContext(context);
             return `
                 You MUST call the 'write_audit_trail' tool.
                 Do NOT generate the final output without first calling the 'write_audit_trail' tool and waiting for its response. 

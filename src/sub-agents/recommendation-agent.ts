@@ -2,19 +2,19 @@ import { BeforeModelCallback, LlmAgent } from '@google/adk';
 import { RECOMMENDATION_KEY } from './output_keys.js';
 import { generateFailedDecisionPrompt, generateRecommendationPrompt } from './prompts/recommendation.prompt.js';
 import { recommendationSchema } from './types/index.js';
-import { getEvaluationContext } from './utils.js';
+import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
 
 const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
-    const { intent, antiPatterns, decision } = getEvaluationContext(context);
+    const { project, antiPatterns, decision } = getEvaluationContext(context);
 
-    const isIntentComplete = intent && intent.constraint && intent.goal && intent.problem && intent.task;
-    const isIntentMissingData = intent && (!intent.constraint || !intent.goal || !intent.problem || !intent.task);
+    const { isCompleted, isMissingData } = isProjectDetailsFilled(project);
+    const isDecisionNone = decision && decision.verdict === 'None';
 
-    if (isIntentComplete && antiPatterns && decision && decision.verdict !== 'None') {
+    if (isCompleted && antiPatterns && decision && decision.verdict !== 'None') {
         return undefined;
-    } else if (isIntentMissingData && decision && decision.verdict === 'None') {
+    } else if (isMissingData && isDecisionNone) {
         return undefined;
-    } else if (isIntentComplete && decision && decision.verdict === 'None') {
+    } else if (isCompleted && isDecisionNone) {
         return {
             content: {
                 role: 'model',
@@ -51,18 +51,16 @@ export function createRecommendationAgent(model: string) {
             'Generates a recommendation report based on the user intent, identified anti-patterns, and architectural decision found in the session state.',
         beforeModelCallback,
         instruction: (context) => {
-            const { intent, antiPatterns, decision } = getEvaluationContext(context);
-            console.log('RecommendationAgent', intent, antiPatterns, decision);
-            const isIntentComplete = intent && intent.constraint && intent.goal && intent.problem && intent.task;
-            const isIntentMissingData =
-                intent && (!intent.constraint || !intent.goal || !intent.problem || !intent.task);
+            const { project, antiPatterns, decision } = getEvaluationContext(context);
+            console.log('RecommendationAgent', project, antiPatterns, decision);
+            const { isCompleted, isMissingData } = isProjectDetailsFilled(project);
 
-            if (isIntentMissingData && decision && decision.verdict === 'None') {
+            if (project && isMissingData && decision && decision.verdict === 'None') {
                 console.log('RecommendationAgent -> generateFailedDecisionPrompt');
-                return generateFailedDecisionPrompt(intent);
-            } else if (isIntentComplete && antiPatterns && decision && decision.verdict !== 'None') {
+                return generateFailedDecisionPrompt(project);
+            } else if (project && isCompleted && antiPatterns && decision && decision.verdict !== 'None') {
                 console.log('RecommendationAgent -> generateRecommendationPrompt');
-                return generateRecommendationPrompt(intent, antiPatterns, decision);
+                return generateRecommendationPrompt(project, antiPatterns, decision);
             }
             return 'Skipping LLM due to missing data.';
         },

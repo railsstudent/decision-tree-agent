@@ -1,8 +1,9 @@
 import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
 import { createAuditAndUploadAgents, createMergerAgent } from './sub-agents/audit-and-upload-agents.js';
-import { createDecisionTreeAgent } from './sub-agents/evaluation-agents.js';
-import { ANTI_PATTERNS_KEY, INTENT_KEY } from './sub-agents/output_keys.js';
+import { createDecisionTreeAgent } from './sub-agents/decision-agent.js';
+import { createProjectAgent } from './sub-agents/project-agent.js';
+import { ANTI_PATTERNS_KEY } from './sub-agents/output_keys.js';
 import { createRecommendationAgent } from './sub-agents/recommendation-agent.js';
 
 process.loadEnvFile();
@@ -20,16 +21,6 @@ const injectStateTool = new FunctionTool({
         if (!context) {
             return;
         }
-
-        // We write directly to the session state that the downstream agents expect
-        context?.state.set(INTENT_KEY, {
-            task: 'Parse incoming email requests for key data, Query CRM/Order database, Reason about refund eligibility based on policy (e.g., within 30 days, item not used), Execute refund via API or send a specific rejection email.',
-            goal: 'Efficiently manage customer refund requests by verifying eligibility against history and policy, reducing human administrative burden.',
-            problem:
-                'Policies are complex and change; customers often have unique situations requiring "human-like" judgement; data is siloed between emails and CRM',
-            constraint:
-                'Must be accurate to policy; must handle edge cases where customer requires follow-up (latency is less critical than accuracy).',
-        });
 
         context?.state.set(ANTI_PATTERNS_KEY, {
             isChatbot: false,
@@ -52,6 +43,7 @@ const betterMockSetupAgent = new LlmAgent({
 
 function createSubAgents(model: string) {
     return [
+        createProjectAgent(model),
         createDecisionTreeAgent(model),
         createRecommendationAgent(model),
         createAuditAndUploadAgents(model),

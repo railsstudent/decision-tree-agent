@@ -1,7 +1,7 @@
-import { AntiPatterns, Decision, UserIntent } from '../types/index.js';
+import { AntiPatterns, Decision, Project } from '../types/index.js';
 
 export function generateRecommendationPrompt(
-    intent: UserIntent | undefined,
+    intent: Project | undefined,
     antiPatterns: AntiPatterns | undefined,
     decision: Decision | undefined,
 ) {
@@ -52,7 +52,7 @@ export function generateRecommendationPrompt(
     `;
 }
 
-export function generateFailedDecisionPrompt(intent: UserIntent | undefined) {
+export function generateFailedDecisionPrompt(intent: Project | undefined) {
     return `
     Your task is to generate a recommendation report.
     However, a decision cannot be reached.

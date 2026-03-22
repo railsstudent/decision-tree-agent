@@ -1,13 +1,13 @@
 import { array, z } from 'zod';
 
-export const userIntentSchema = z.object({
+export const projectSchema = z.object({
     goal: z.string(),
     task: z.string(),
     problem: z.string(),
     constraint: z.string(),
 });
 
-export type UserIntent = z.infer<typeof userIntentSchema>;
+export type Project = z.infer<typeof projectSchema>;
 
 export const antiPatternsSchema = z.object({
     isChatbot: z.boolean(),

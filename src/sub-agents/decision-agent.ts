@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { DECISION_KEY } from './output_keys.js';
 import { generateDecisionPrompt } from './prompts/evaluation.prompt.js';
 import { decisionSchema } from './types/index.js';
-import { getEvaluationContext } from './utils.js';
+import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
 
 const MAX_ITERATIONS = 3;
 
@@ -64,12 +64,12 @@ const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
         };
     }
 
-    const { intent, antiPatterns } = getEvaluationContext(context);
+    const { project, antiPatterns } = getEvaluationContext(context);
 
     console.log('in evaluation -> beforeModelCallback');
-    const isIntentComplete = intent && intent.constraint && intent.goal && intent.problem && intent.task;
+    const { isCompleted } = isProjectDetailsFilled(project);
 
-    if (isIntentComplete && antiPatterns) {
+    if (isCompleted && antiPatterns) {
         return undefined;
     }
 
@@ -98,10 +98,10 @@ export function createDecisionTreeAgent(model: string) {
             'Evaluates the user intent against the Agent Fundamentals decision tree to determine the optimal architectural solution.',
         beforeModelCallback,
         instruction: (context) => {
-            const { intent, antiPatterns } = getEvaluationContext(context);
-            const isIntentComplete = intent && intent.constraint && intent.goal && intent.problem && intent.task;
-            if (isIntentComplete && antiPatterns) {
-                return generateDecisionPrompt(intent);
+            const { project, antiPatterns } = getEvaluationContext(context);
+            const isIntentComplete = isProjectDetailsFilled(project);
+            if (project && isIntentComplete && antiPatterns) {
+                return generateDecisionPrompt(project);
             }
 
             return 'Skipping LLM due to incomplete INTENT data.';
