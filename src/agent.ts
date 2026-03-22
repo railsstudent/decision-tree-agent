@@ -1,8 +1,8 @@
 import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
-import { createAuditAndReportAgent, createMergerAgent } from './sub-agents/audit-and-report-agent.js';
+import { createAuditAndUploadAgents, createMergerAgent } from './sub-agents/audit-and-upload-agent.js';
 import { ANTI_PATTERNS_KEY, DECISION_KEY, INTENT_KEY } from './sub-agents/output_keys.js';
-import { createRecommendationReportAgent } from './sub-agents/recommendation-report-agent.js';
+import { createRecommendationAgent } from './sub-agents/recommendation-agent.js';
 
 process.loadEnvFile();
 
@@ -34,7 +34,9 @@ const injectStateTool = new FunctionTool({
             isWorkflow: true,
             isSafetyCritical: false,
         });
-        context?.state.set(DECISION_KEY, { verdict: 'Use Agent' });
+        context?.state.set(DECISION_KEY, {
+            verdict: 'Use Agent',
+        });
 
         return { status: 'Mock data injected successfully.' };
     },
@@ -49,7 +51,7 @@ const betterMockSetupAgent = new LlmAgent({
 });
 
 function createSubAgents(model: string) {
-    return [createRecommendationReportAgent(model), createAuditAndReportAgent(model), createMergerAgent(model)];
+    return [createRecommendationAgent(model), createAuditAndUploadAgents(model), createMergerAgent(model)];
 }
 
 export const SequentialEvaluationAgent = new SequentialAgent({

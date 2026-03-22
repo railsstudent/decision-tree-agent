@@ -1,9 +1,9 @@
 import { FunctionTool, LlmAgent, ParallelAgent } from '@google/adk';
 import { z } from 'zod';
-import { AUDIT_TRAIL_KEY, CLOUD_STORAGE_KEY, MERGED_RESULTS_KEY, REPORT_KEY } from './output_keys.js';
-import { auditTrailSchema, cloudStorageSchema } from './types/merger.type.js';
-import { RecommendationReport } from './types/recommendation-report.type.js';
+import { AUDIT_TRAIL_KEY, CLOUD_STORAGE_KEY, MERGED_RESULTS_KEY, RECOMMENDATION_KEY } from './output_keys.js';
+import { auditTrailSchema, cloudStorageSchema, Recommendation, recommendationSchema } from './types/index.js';
 import { getEvaluationContext } from './utils.js';
+import crypto from 'node:crypto';
 
 export const auditTrailTool = new FunctionTool({
     name: 'write_audit_trail',
@@ -14,22 +14,10 @@ export const auditTrailTool = new FunctionTool({
         );
         console.log('write_audit_trail timestamp', timestamp);
 
-        const evaluationContext = getEvaluationContext(context);
-        const { intent, antiPatterns, decision } = evaluationContext;
-
-        if (!intent && !antiPatterns && !decision) {
-            return {
-                status: 'error',
-                timestamp,
-                intent: null,
-                antiPatterns: null,
-                decision: null,
-            };
-        }
-
-        console.log(intent, antiPatterns, decision);
+        const { intent, antiPatterns, decision } = getEvaluationContext(context);
+        const status = intent && antiPatterns && decision ? 'success' : 'error';
         const result = {
-            status: 'success',
+            status,
             timestamp,
             intent,
             antiPatterns,
@@ -45,16 +33,19 @@ export const cloudStorageTool = new FunctionTool({
     name: 'upload_report_to_cloud',
     description: 'Upload the recommendation report to the cloud storage',
     execute: async (_, context) => {
-        const report = context?.state.get<string>(REPORT_KEY) || '';
+        const { report } = getEvaluationContext(context);
         const timestamp = await new Promise<string>((resolve) =>
-            setTimeout(() => resolve(new Date(Date.now()).toISOString()), 2000),
+            setTimeout(() => resolve(new Date(Date.now()).toISOString()), 3000),
         );
-        console.log('report length', report.length, 'timestamp', timestamp);
+        const reportLength = report ? (report as Recommendation).text.length : 0;
+        const status = reportLength > 0 ? 'success' : 'error';
+        const url = status === 'success' ? `https://example.com/recommendation-${reportLength}-${timestamp}.pdf` : '';
+        const uuid = crypto.randomUUID();
         const result = {
-            uuid: Date.now().toString(),
-            status: 'success',
+            uuid,
+            status,
             timestamp,
-            url: `https://example.com/recommendation-${report.length}-${timestamp}.pdf`,
+            url,
         };
 
         console.log('upload_report_to_cloud result', result);
@@ -62,15 +53,27 @@ export const cloudStorageTool = new FunctionTool({
     },
 });
 
-export function createAuditAndReportAgent(model: string) {
+export function createAuditAndUploadAgents(model: string) {
     const auditAgent = new LlmAgent({
         name: 'AuditTrailAgent',
         model,
         description: 'Audit the intent, anti-patterns and decision of the evaluation.',
-        instruction: `
-            You MUST call the 'write_audit_trail' tool.
-            Do NOT generate the final output without first calling the 'write_audit_trail' tool and waiting for its response. Use the tool's result property to formulate your final JSON output.
-        `,
+        instruction: async (context) => {
+            const { intent, antiPatterns, decision } = getEvaluationContext(context);
+            return `
+                You MUST call the 'write_audit_trail' tool.
+                Do NOT generate the final output without first calling the 'write_audit_trail' tool and waiting for its response. 
+            
+                ### INPUT DATA (READ-ONLY)
+                The following data has been retrieved from the session state for this project. You MUST use ONLY this data and MUST NOT hallucinate or invent any project details:
+                - INTENT: ${JSON.stringify(intent)}
+                - ANTI-PATTERNS: ${JSON.stringify(antiPatterns)}
+                - DECISION: ${JSON.stringify(decision)}
+
+                ### OUTPUT FORMAT
+                - You MUST populate these exact values with the 'status' and 'timestamp' returned by the 'write_audit_trail' tool.
+            `;
+        },
         tools: [auditTrailTool],
         outputSchema: auditTrailSchema,
         outputKey: AUDIT_TRAIL_KEY,
@@ -80,10 +83,21 @@ export function createAuditAndReportAgent(model: string) {
         name: 'CloudStorageAgent',
         model,
         description: 'Upload the report to the cloud storage.',
-        instruction: `
-            You MUST call the 'upload_report_to_cloud' tool.
-            Do NOT generate the final output without first calling the 'upload_report_to_cloud' tool and waiting for its response. Use the tool's result property to formulate your final JSON output.
-        `,
+        instruction: (context) => {
+            const { report } = getEvaluationContext(context);
+
+            return `
+                You MUST call the 'upload_report_to_cloud' tool.
+                Do NOT generate the final output without first calling the 'upload_report_to_cloud' tool and waiting for its response.
+
+                ### INPUT DATA (READ-ONLY)
+                The following data has been retrieved from the session state for this project. You MUST use ONLY this data and MUST NOT hallucinate or invent any project details:
+                - REPORT: ${JSON.stringify(report)}
+
+                ### OUTPUT FORMAT
+                - You MUST populate an object with 'status', 'url', 'uuid', and 'timestamp' returned by the 'upload_report_to_cloud' tool.
+            `;
+        },
         tools: [cloudStorageTool],
         outputSchema: cloudStorageSchema,
         outputKey: CLOUD_STORAGE_KEY,
@@ -111,19 +125,19 @@ export const mergerTool = new FunctionTool({
         if (!context || !context.state) {
             const result = {
                 auditTrail: null,
-                report: '',
+                report: null,
                 cloudStorage: null,
             };
             console.log('merge_results result', result);
             return result;
         }
-        const auditTrail = context?.state.get(AUDIT_TRAIL_KEY);
-        const cloudStorage = context?.state.get(CLOUD_STORAGE_KEY);
-        const report = context?.state.get<RecommendationReport>(REPORT_KEY, { text: '' });
+        const auditTrail = context?.state.get(AUDIT_TRAIL_KEY) ?? null;
+        const cloudStorage = context?.state.get(CLOUD_STORAGE_KEY) ?? null;
+        const report = context?.state.get(RECOMMENDATION_KEY) ?? null;
 
         const result = {
             auditTrail,
-            report: report?.text,
+            report,
             cloudStorage,
             timestamp,
         };
@@ -147,7 +161,7 @@ export function createMergerAgent(model: string) {
         `,
         outputSchema: z.object({
             auditTrail: auditTrailSchema.nullable(),
-            report: z.string(),
+            report: recommendationSchema.nullable(),
             cloudStorage: cloudStorageSchema.nullable(),
             timestamp: z.string(),
         }),

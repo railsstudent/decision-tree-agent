@@ -14,3 +14,9 @@ export const antiPatternsSchema = z.object({
     isWorkflow: z.boolean(),
     isSafetyCritical: z.boolean(),
 });
+
+export const decisionSchema = z.object({
+    verdict: z.enum(['Use Agent', 'Use Simple API', 'Use Workflow Automation', 'Use LLM']),
+});
+
+export type Decision = z.infer<typeof decisionSchema>;

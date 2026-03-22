@@ -1,5 +1,5 @@
 export const AUDIT_TRAIL_KEY = 'auditTrail';
-export const REPORT_KEY = 'report';
+export const RECOMMENDATION_KEY = 'recommendation';
 export const CLOUD_STORAGE_KEY = 'cloudStorage';
 export const DECISION_KEY = 'decision';
 export const INTENT_KEY = 'intent';

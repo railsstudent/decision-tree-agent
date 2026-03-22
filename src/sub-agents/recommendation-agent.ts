@@ -1,22 +1,31 @@
-import { FunctionTool, LlmAgent } from '@google/adk';
-import { ANTI_PATTERNS_KEY, DECISION_KEY, INTENT_KEY, REPORT_KEY } from './output_keys.js';
-import { recommendationReportSchema } from './types/recommendation-report.type.js';
+import { LlmAgent } from '@google/adk';
+import { RECOMMENDATION_KEY } from './output_keys.js';
+import { recommendationSchema } from './types/index.js';
 import { getEvaluationContext } from './utils.js';
 
-export const getEvaluationContextTool = new FunctionTool({
-    name: 'get_evaluation_context',
-    description:
-        'Retrieves the user intent, identified anti-patterns, and architectural decision from the session state.',
-    execute: async (_, context) => getEvaluationContext(context),
-});
-
-export function createRecommendationReportAgent(model: string) {
-    const recommendationReportAgent = new LlmAgent({
-        name: 'RecommendationReportAgent',
+export function createRecommendationAgent(model: string) {
+    const recommendationAgent = new LlmAgent({
+        name: 'RecommendationAgent',
         model,
         description:
             'Generates a recommendation report based on the user intent, identified anti-patterns, and architectural decision found in the session state.',
-        instruction: `
+        instruction: async (context) => {
+            const { intent, antiPatterns, decision } = getEvaluationContext(context);
+
+            if (!intent || !antiPatterns || !decision) {
+                return `
+                Your task is to generate a recommendation report.
+                However, some required data (intent, anti-patterns, or decision) is missing from the session state.
+
+                ### OUTPUT FORMAT
+                - You MUST populate the 'text' property of the output schema with exactly the following Markdown text:
+                    - Main Heading: "## Recommendation".
+                    - Content:
+                        - Unavailable due to missing required data.
+                `;
+            }
+
+            return `
             You are an expert AI architecture consultant. Your task is to synthesize an architectural recommendation report based on Google's Agent Fundamentals.
 
             ### KNOWLEDGE BASE: AGENT FUNDAMENTALS
@@ -40,17 +49,16 @@ export function createRecommendationReportAgent(model: string) {
                - Use LLM: Complex reasoning needed but no external actions or adaptation.
                - Use Workflow Automation: Multi-step but deterministic/rule-based.
 
-            ### INPUT DATA
-            You MUST call the 'get_evaluation_context' tool to retrieve the intent, anti-patterns, and decision data from the session state.
-            You MUST use ONLY the data returned by this tool. You MUST NOT hallucinate or invent any project details:
-            - '${INTENT_KEY}': The original goal or use case.
-            - '${ANTI_PATTERNS_KEY}': Any identified architectural anti-patterns.
-            - '${DECISION_KEY}': An object containing a 'verdict' property (the chosen architecture).
+            ### INPUT DATA (READ-ONLY)
+            The following data has been retrieved from the session state for this project. You MUST use ONLY this data and MUST NOT hallucinate or invent any project details:
+            - INTENT: ${JSON.stringify(intent)}
+            - ANTI-PATTERNS: ${JSON.stringify(antiPatterns)}
+            - DECISION: ${JSON.stringify(decision)}
 
             ### LOGIC GUIDELINES
-            - CRITICAL: If '${ANTI_PATTERNS_KEY}' are present and ANY flag (isChatbot, isSingleAPI, isHighVolume, isWorkflow, isSafetyCritical) is true, you MUST NOT recommend using an Agent. You MUST ignore the '${DECISION_KEY}.verdict' data. Explain why an agent is unsuitable and recommend the appropriate alternative.
-            - If no anti-patterns are true and '${DECISION_KEY}.verdict' is 'Use Agent', highlight how the solution leverages reasoning, adaptation, and tool use.
-            - If no anti-patterns are true but '${DECISION_KEY}.verdict' is NOT 'Use Agent', explain why an agent should not be used and how to adapt the suggested verdict (Simple API, LLM, or Workflow) to the project.
+            - CRITICAL: If any ANTI-PATTERN flag (isChatbot, isSingleAPI, isHighVolume, isWorkflow, isSafetyCritical) is true, you MUST NOT recommend using an Agent. You MUST ignore the DECISION verdict data. Explain why an agent is unsuitable and recommend the appropriate alternative.
+            - If no anti-patterns are true and the DECISION verdict is 'Use Agent', highlight how the solution leverages reasoning, adaptation, and tool use.
+            - If no anti-patterns are true but the DECISION verdict is NOT 'Use Agent', explain why an agent should not be used and how to adapt the suggested verdict (Simple API, LLM, or Workflow) to the project.
             - Align with the framework: Use Agent, Use Simple API, Use Workflow Automation, or Use LLM.
 
             ### OUTPUT FORMAT
@@ -58,14 +66,15 @@ export function createRecommendationReportAgent(model: string) {
             - The Markdown string MUST contain:
               - Main Heading: "## Recommendation".
               - Content:
-                - You MUST start the content with 1 to 2 sentences that concisely summarize the task, goal, problem, and constraint found in the '${INTENT_KEY}' object.
+                - You MUST start the content with 1 to 2 sentences that concisely summarize the task, goal, problem, and constraint found in the INTENT object.
                 - Follow this with 1 to 2 short, concise paragraphs summarizing the architectural recommendation based on the logic guidelines above.
               - Summary: A heading "### Key points" followed by a bulleted list of technical rationales.
-        `,
-        tools: [getEvaluationContextTool],
-        outputSchema: recommendationReportSchema,
-        outputKey: REPORT_KEY,
+        `;
+        },
+        tools: [],
+        outputSchema: recommendationSchema,
+        outputKey: RECOMMENDATION_KEY,
     });
 
-    return recommendationReportAgent;
+    return recommendationAgent;
 }
