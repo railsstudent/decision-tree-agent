@@ -1,6 +1,6 @@
 import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
-import { createAuditAndUploadAgents, createMergerAgent } from './sub-agents/audit-and-upload-agent.js';
+import { createAuditAndUploadAgents, createMergerAgent } from './sub-agents/audit-and-upload-agents.js';
 import { ANTI_PATTERNS_KEY, DECISION_KEY, INTENT_KEY } from './sub-agents/output_keys.js';
 import { createRecommendationAgent } from './sub-agents/recommendation-agent.js';
 

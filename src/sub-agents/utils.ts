@@ -1,5 +1,6 @@
 import { ReadonlyContext } from '@google/adk';
 import { ANTI_PATTERNS_KEY, DECISION_KEY, INTENT_KEY, RECOMMENDATION_KEY } from './output_keys.js';
+import { UserIntent, Decision, Recommendation, AntiPatterns } from './types/index.js';
 
 export function getEvaluationContext(context: ReadonlyContext | undefined) {
     if (!context || !context.state) {
@@ -12,9 +13,9 @@ export function getEvaluationContext(context: ReadonlyContext | undefined) {
     }
 
     return {
-        intent: context.state.get(INTENT_KEY) ?? null,
-        antiPatterns: context.state.get(ANTI_PATTERNS_KEY) ?? null,
-        decision: context.state.get(DECISION_KEY) ?? null,
-        report: context.state.get(RECOMMENDATION_KEY) ?? null,
+        intent: context.state.get<UserIntent>(INTENT_KEY) ?? undefined,
+        antiPatterns: context.state.get<AntiPatterns>(ANTI_PATTERNS_KEY) ?? undefined,
+        decision: context.state.get<Decision>(DECISION_KEY) ?? undefined,
+        report: context.state.get<Recommendation>(RECOMMENDATION_KEY) ?? undefined,
     };
 }

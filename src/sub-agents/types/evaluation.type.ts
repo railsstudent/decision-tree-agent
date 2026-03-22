@@ -7,6 +7,8 @@ export const userIntentSchema = z.object({
     constraint: z.string(),
 });
 
+export type UserIntent = z.infer<typeof userIntentSchema>;
+
 export const antiPatternsSchema = z.object({
     isChatbot: z.boolean(),
     isSingleAPI: z.boolean(),
@@ -15,8 +17,10 @@ export const antiPatternsSchema = z.object({
     isSafetyCritical: z.boolean(),
 });
 
+export type AntiPatterns = z.infer<typeof antiPatternsSchema>;
+
 export const decisionSchema = z.object({
-    verdict: z.enum(['Use Agent', 'Use Simple API', 'Use Workflow Automation', 'Use LLM']),
+    verdict: z.enum(['Use Agent', 'Use Simple API', 'Use Workflow Automation', 'Use LLM', 'None']).default('None'),
 });
 
 export type Decision = z.infer<typeof decisionSchema>;
