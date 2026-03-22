@@ -58,10 +58,11 @@ instruction: \`
     - Align with the framework: Use Agent, Use Simple API, Use Workflow Automation, or Use LLM.
 
     ### OUTPUT FORMAT
-    - Format: Markdown.
-    - Main Heading: "## Recommendation".
-    - Content: 1 to 2 short, concise paragraphs summarizing the recommendation.
-    - Summary: A heading "### Key points" followed by a bulleted list of technical rationales.
+    - You must populate the 'text' property of the output schema with a Markdown formatted string.
+    - The Markdown string should contain:
+      - Main Heading: "## Recommendation".
+      - Content: 1 to 2 short, concise paragraphs summarizing the recommendation.
+      - Summary: A heading "### Key points" followed by a bulleted list of technical rationales.
 \`,
 ```
 

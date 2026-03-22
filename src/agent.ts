@@ -1,7 +1,8 @@
 import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
 import { createAuditAndReportAgent, createMergerAgent } from './sub-agents/audit-and-report-agent.js';
-import { ANTI_PATTERNS_KEY, DECISION_KEY, INTENT_KEY, REPORT_KEY } from './sub-agents/output_keys.js';
+import { ANTI_PATTERNS_KEY, DECISION_KEY, INTENT_KEY } from './sub-agents/output_keys.js';
+import { createRecommendationReportAgent } from './sub-agents/recommendation-report-agent.js';
 
 process.loadEnvFile();
 
@@ -27,14 +28,13 @@ const injectStateTool = new FunctionTool({
             constraint: 'my constraint',
         });
         context?.state.set(ANTI_PATTERNS_KEY, {
-            isChatbot: true,
+            isChatbot: false,
             isSingleAPI: false,
             isHighVolume: false,
-            isWorkflow: false,
+            isWorkflow: true,
             isSafetyCritical: false,
         });
-        context?.state.set(DECISION_KEY, 'Approved mock decision');
-        context?.state.set(REPORT_KEY, { text: 'Final mock recommendation report text.' });
+        context?.state.set(DECISION_KEY, { verdict: 'Use Agent' });
 
         return { status: 'Mock data injected successfully.' };
     },
@@ -48,9 +48,13 @@ const betterMockSetupAgent = new LlmAgent({
     tools: [injectStateTool],
 });
 
+function createSubAgents(model: string) {
+    return [createRecommendationReportAgent(model), createAuditAndReportAgent(model), createMergerAgent(model)];
+}
+
 export const SequentialEvaluationAgent = new SequentialAgent({
     name: 'SequentialEvaluationAgent',
-    subAgents: [betterMockSetupAgent, createAuditAndReportAgent(model), createMergerAgent(model)],
+    subAgents: [betterMockSetupAgent, ...createSubAgents(model)],
     description: `Runs agents sequentially to establish the intent of the project,
      detect any anti-patterns, make a descision, write a recommendation report, 
      audit the values to reach the descision, upload the report to code, and merge the results to a JSON object

@@ -36,19 +36,22 @@ export function createRecommendationReportAgent(model: string) {
             Read the following from the session state:
             - '${INTENT_KEY}': The original goal or use case.
             - '${ANTI_PATTERNS_KEY}': Any identified architectural anti-patterns.
-            - '${DECISION_KEY}': The evaluation decision matrix (multiple steps, reasoning, adaptation, external actions).
+            - '${DECISION_KEY}': An object containing a 'verdict' property (the chosen architecture).
 
             ### LOGIC GUIDELINES
-            - CRITICAL: If '${ANTI_PATTERNS_KEY}' are present and ANY flag is true, you MUST ignore the '${DECISION_KEY}' data. Use the '${ANTI_PATTERNS_KEY}' knowledge above to explain why an agent is unsuitable and recommend a simpler alternative.
-            - If no anti-patterns are true and the '${DECISION_KEY}' is "Use Agent", highlight how the solution leverages reasoning, adaptation, and tool use.
-            - If no anti-patterns are true but the '${DECISION_KEY}' is NOT "Use Agent", explain why an agent should not be used (based on the criteria above) and how to adapt the decision (e.g., LLM, API, or Workflow) to the current project.
+            - CRITICAL: If '${ANTI_PATTERNS_KEY}' are present and ANY flag (isChatbot, isSingleAPI, isHighVolume, isWorkflow, isSafetyCritical) is true, you MUST NOT recommend using an Agent. You MUST ignore the '${DECISION_KEY}.verdict' data. Explain why an agent is unsuitable and recommend the appropriate alternative.
+            - If no anti-patterns are true and '${DECISION_KEY}.verdict' is 'Use Agent', highlight how the solution leverages reasoning, adaptation, and tool use.
+            - If no anti-patterns are true but '${DECISION_KEY}.verdict' is NOT 'Use Agent', explain why an agent should not be used and how to adapt the suggested verdict (Simple API, LLM, or Workflow) to the project.
             - Align with the framework: Use Agent, Use Simple API, Use Workflow Automation, or Use LLM.
 
             ### OUTPUT FORMAT
-            - Format: Markdown.
-            - Main Heading: "## Recommendation".
-            - Content: 1 to 2 short, concise paragraphs summarizing the recommendation.
-            - Summary: A heading "### Key points" followed by a bulleted list of technical rationales.
+            - You MUST populate the 'text' property of the output schema with a Markdown formatted string.
+            - The Markdown string MUST contain:
+              - Main Heading: "## Recommendation".
+              - Content:
+                - You MUST start the content with 1 to 2 sentences that concisely summarize the task, goal, problem, and constraint found in the '${INTENT_KEY}' object.
+                - Follow this with 1 to 2 short, concise paragraphs summarizing the architectural recommendation based on the logic guidelines above.
+              - Summary: A heading "### Key points" followed by a bulleted list of technical rationales.
         `,
         tools: [],
         outputSchema: recommendationReportSchema,
