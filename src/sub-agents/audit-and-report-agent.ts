@@ -1,16 +1,9 @@
 import { FunctionTool, LlmAgent, ParallelAgent } from '@google/adk';
 import { z } from 'zod';
-import {
-    ANTI_PATTERNS_KEY,
-    AUDIT_TRAIL_KEY,
-    CLOUD_STORAGE_KEY,
-    DECISION_KEY,
-    INTENT_KEY,
-    MERGED_RESULTS_KEY,
-    REPORT_KEY,
-} from './output_keys.js';
+import { AUDIT_TRAIL_KEY, CLOUD_STORAGE_KEY, MERGED_RESULTS_KEY, REPORT_KEY } from './output_keys.js';
 import { auditTrailSchema, cloudStorageSchema } from './types/merger.type.js';
 import { RecommendationReport } from './types/recommendation-report.type.js';
+import { getEvaluationContext } from './utils.js';
 
 export const auditTrailTool = new FunctionTool({
     name: 'write_audit_trail',
@@ -21,7 +14,10 @@ export const auditTrailTool = new FunctionTool({
         );
         console.log('write_audit_trail timestamp', timestamp);
 
-        if (!context || !context.state) {
+        const evaluationContext = getEvaluationContext(context);
+        const { intent, antiPatterns, decision } = evaluationContext;
+
+        if (!intent && !antiPatterns && !decision) {
             return {
                 status: 'error',
                 timestamp,
@@ -30,9 +26,6 @@ export const auditTrailTool = new FunctionTool({
                 decision: null,
             };
         }
-        const intent = context?.state.get(INTENT_KEY);
-        const antiPatterns = context?.state.get(ANTI_PATTERNS_KEY);
-        const decision = context?.state.get(DECISION_KEY);
 
         console.log(intent, antiPatterns, decision);
         const result = {

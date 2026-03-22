@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { antiPatternsSchema, userIntentSchema } from './evaluation.type.js';
+import { decisionSchema } from './recommendation-report.type.js';
 
 export const auditTrailSchema = z.object({
     intent: userIntentSchema.nullable(),
     status: z.enum(['success', 'error']),
     timestamp: z.string(),
-    decision: z.string().nullable(),
+    decision: decisionSchema.nullable(),
     antiPatterns: antiPatternsSchema.nullable(),
 });
 

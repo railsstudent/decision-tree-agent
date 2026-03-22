@@ -1,6 +1,14 @@
-import { LlmAgent } from '@google/adk';
+import { FunctionTool, LlmAgent } from '@google/adk';
 import { ANTI_PATTERNS_KEY, DECISION_KEY, INTENT_KEY, REPORT_KEY } from './output_keys.js';
 import { recommendationReportSchema } from './types/recommendation-report.type.js';
+import { getEvaluationContext } from './utils.js';
+
+export const getEvaluationContextTool = new FunctionTool({
+    name: 'get_evaluation_context',
+    description:
+        'Retrieves the user intent, identified anti-patterns, and architectural decision from the session state.',
+    execute: async (_, context) => getEvaluationContext(context),
+});
 
 export function createRecommendationReportAgent(model: string) {
     const recommendationReportAgent = new LlmAgent({
@@ -33,7 +41,8 @@ export function createRecommendationReportAgent(model: string) {
                - Use Workflow Automation: Multi-step but deterministic/rule-based.
 
             ### INPUT DATA
-            Read the following from the session state:
+            You MUST call the 'get_evaluation_context' tool to retrieve the intent, anti-patterns, and decision data from the session state.
+            You MUST use ONLY the data returned by this tool. You MUST NOT hallucinate or invent any project details:
             - '${INTENT_KEY}': The original goal or use case.
             - '${ANTI_PATTERNS_KEY}': Any identified architectural anti-patterns.
             - '${DECISION_KEY}': An object containing a 'verdict' property (the chosen architecture).
@@ -53,7 +62,7 @@ export function createRecommendationReportAgent(model: string) {
                 - Follow this with 1 to 2 short, concise paragraphs summarizing the architectural recommendation based on the logic guidelines above.
               - Summary: A heading "### Key points" followed by a bulleted list of technical rationales.
         `,
-        tools: [],
+        tools: [getEvaluationContextTool],
         outputSchema: recommendationReportSchema,
         outputKey: REPORT_KEY,
     });
