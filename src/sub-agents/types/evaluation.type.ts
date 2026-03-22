@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { array, z } from 'zod';
 
 export const userIntentSchema = z.object({
     goal: z.string(),
@@ -20,6 +20,7 @@ export const antiPatternsSchema = z.object({
 export type AntiPatterns = z.infer<typeof antiPatternsSchema>;
 
 export const decisionSchema = z.object({
+    nodes: array(z.string()).default([]),
     verdict: z.enum(['Use Agent', 'Use Simple API', 'Use Workflow Automation', 'Use LLM', 'None']).default('None'),
 });
 
