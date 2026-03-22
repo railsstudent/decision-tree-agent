@@ -1,16 +1,5 @@
 import { AntiPatterns, Decision, UserIntent } from '../types/index.js';
 
-export const MISSING_DATA_PROMPT = `
-Your task is to generate a recommendation report.
-However, some required data (intent, anti-patterns, or decision) is missing from the session state.
-
-### OUTPUT FORMAT
-- You MUST populate the 'text' property of the output schema with exactly the following Markdown text:
-    - Main Heading: "## Recommendation".
-    - Content:
-        - Unavailable due to missing required data.
-`;
-
 export function generateRecommendationPrompt(
     intent: UserIntent | undefined,
     antiPatterns: AntiPatterns | undefined,
