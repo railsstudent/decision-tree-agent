@@ -73,9 +73,10 @@ export const rootAgent = new LlmAgent({
     model,
     description: 'The orchestrator agent for the project evaluation.',
     instruction: `
-    1. Ask user to write a project description.
-    2. Execute 'SequentialEvaluationAgent'.
-    3. Return the final result in JSON format.
+    1. Ask the user to write a project description.
+    2. Evaluate the user's input. If the input is nonsensical, too brief, or clearly does not describe a software, business, or AI project (e.g., "apple and orange", "hello"), politely explain why it is invalid and ask them to provide a proper description. Do NOT proceed to the next step.
+    3. ONLY if the input is a valid project description, execute 'SequentialEvaluationAgent'.
+    4. Return the final result in JSON format.
     `,
     subAgents: [SequentialEvaluationAgent],
 });
