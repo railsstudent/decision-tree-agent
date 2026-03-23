@@ -44,6 +44,7 @@ const betterMockSetupAgent = new LlmAgent({
 function createSubAgents(model: string) {
     return [
         createProjectAgent(model),
+        betterMockSetupAgent,
         createDecisionTreeAgent(model),
         createRecommendationAgent(model),
         createAuditAndUploadAgents(model),
@@ -53,10 +54,17 @@ function createSubAgents(model: string) {
 
 export const SequentialEvaluationAgent = new SequentialAgent({
     name: 'SequentialEvaluationAgent',
-    subAgents: [betterMockSetupAgent, ...createSubAgents(model)],
-    description: `Runs agents sequentially to establish the intent of the project,
-     detect any anti-patterns, make a descision, write a recommendation report, 
-     audit the values to reach the descision, upload the report to code, and merge the results to a JSON object
+    subAgents: createSubAgents(model),
+    description: `
+        Receive the project description and runs the sub-agents sequentially to perform the following tasks:',
+        Task Order:
+            1. Break the description into core components: task, problem, goal, and constraint.
+            2. Detect any anti-patterns in the description.
+            3. Go through the decision tree to determine whether the description is a agent-shaped problem. 
+            4. Generate recommendation. 
+            5. Log the project components, anti-patterns, and decision to the system logs. 
+            6. Upload the recommendation to a cloud storage.
+            7. Merge the results to a JSON object.
     `,
 });
 
@@ -64,8 +72,10 @@ export const rootAgent = new LlmAgent({
     name: 'project_evaluation_agent',
     model,
     description: 'The orchestrator agent for the project evaluation.',
-    instruction: `1. Immediately run the 'SequentialEvaluationAgent' agent to gather the output from the subagents. Do not ask the user for input.
-    2. Return the final result in JSON format.
+    instruction: `
+    1. Ask user to write a project description.
+    2. Execute 'SequentialEvaluationAgent'.
+    3. Return the final result in JSON format.
     `,
     subAgents: [SequentialEvaluationAgent],
 });
