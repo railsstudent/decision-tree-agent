@@ -1,6 +1,6 @@
 import { BeforeModelCallback, FunctionTool, LlmAgent } from '@google/adk';
 import { z } from 'zod';
-import { DECISION_KEY } from './output_keys.js';
+import { DECISION_KEY, VALIDATION_ATTEMPTS_KEY } from './output_keys.js';
 import { generateDecisionPrompt } from './prompts/evaluation.prompt.js';
 import { decisionSchema } from './types/index.js';
 import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
@@ -18,7 +18,7 @@ export const validateDecisionTool = new FunctionTool({
         let attempts = toolContext?.state.get<number>('VALIDATION_ATTEMPTS') || 0;
         attempts = attempts + 1;
         if (toolContext) {
-            toolContext.state.set('VALIDATION_ATTEMPTS', attempts);
+            toolContext.state.set(VALIDATION_ATTEMPTS_KEY, attempts);
         }
 
         if (attempts >= MAX_ITERATIONS) {

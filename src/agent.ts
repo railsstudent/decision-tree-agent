@@ -2,8 +2,18 @@ import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
 import { createAuditAndUploadAgents, createMergerAgent } from './sub-agents/audit-and-upload-agents.js';
 import { createDecisionTreeAgent } from './sub-agents/decision-agent.js';
+import {
+    ANTI_PATTERNS_KEY,
+    AUDIT_TRAIL_KEY,
+    CLOUD_STORAGE_KEY,
+    DECISION_KEY,
+    MERGED_RESULTS_KEY,
+    PROJECT_DESCRIPTION_KEY,
+    PROJECT_KEY,
+    RECOMMENDATION_KEY,
+    VALIDATION_ATTEMPTS_KEY,
+} from './sub-agents/output_keys.js';
 import { createProjectAgent } from './sub-agents/project-agent.js';
-import { ANTI_PATTERNS_KEY } from './sub-agents/output_keys.js';
 import { createRecommendationAgent } from './sub-agents/recommendation-agent.js';
 
 process.loadEnvFile();
@@ -12,6 +22,36 @@ const model = process.env.GEMINI_MODEL_NAME || '';
 if (!model) {
     throw new Error('GEMINI_MODEL_NAME is not set');
 }
+
+const prepareEvaluationTool = new FunctionTool({
+    name: 'prepare_evaluation',
+    description: 'Resets the session state and stores the new project description to prepare for a fresh evaluation.',
+    parameters: z.object({
+        description: z.string().describe('The validated project description from the user.'),
+    }),
+    execute: async ({ description }, context) => {
+        if (!context || !context.state) {
+            return { status: 'ERROR', message: 'No session state found.' };
+        }
+
+        const state = context.state;
+
+        // Clear all previous evaluation data
+        state.set(PROJECT_KEY, null);
+        state.set(ANTI_PATTERNS_KEY, null);
+        state.set(DECISION_KEY, null);
+        state.set(RECOMMENDATION_KEY, null);
+        state.set(AUDIT_TRAIL_KEY, null);
+        state.set(CLOUD_STORAGE_KEY, null);
+        state.set(MERGED_RESULTS_KEY, null);
+        state.set(VALIDATION_ATTEMPTS_KEY, 0);
+
+        // Set the new description for the ProjectAgent to find
+        state.set(PROJECT_DESCRIPTION_KEY, description);
+
+        return { status: 'SUCCESS', message: 'State reset and description updated.' };
+    },
+});
 
 const injectStateTool = new FunctionTool({
     name: 'inject_test_state',
@@ -56,15 +96,8 @@ export const SequentialEvaluationAgent = new SequentialAgent({
     name: 'SequentialEvaluationAgent',
     subAgents: createSubAgents(model),
     description: `
-        Receive the project description and runs the sub-agents sequentially to perform the following tasks:',
-        Task Order:
-            1. Break the description into core components: task, problem, goal, and constraint.
-            2. Detect any anti-patterns in the description.
-            3. Go through the decision tree to determine whether the description is a agent-shaped problem. 
-            4. Generate recommendation. 
-            5. Log the project components, anti-patterns, and decision to the system logs. 
-            6. Upload the recommendation to a cloud storage.
-            7. Merge the results to a JSON object.
+        A sequential pipeline that takes a validated project description and evaluates its suitability for an AI agent architecture. 
+        It breaks down the project components, applies decision-tree logic, generates an architectural recommendation, and returns a finalized, merged JSON report.
     `,
 });
 
@@ -75,8 +108,11 @@ export const rootAgent = new LlmAgent({
     instruction: `
     1. Ask the user to write a project description.
     2. Evaluate the user's input. If the input is nonsensical, too brief, or clearly does not describe a software, business, or AI project (e.g., "apple and orange", "hello"), politely explain why it is invalid and ask them to provide a proper description. Do NOT proceed to the next step.
-    3. ONLY if the input is a valid project description, execute 'SequentialEvaluationAgent'.
+    3. ONLY if the input is a valid project description, perform the following in order:
+        a. Call 'prepare_evaluation' with the user's description to reset the session state.
+        b. Execute 'SequentialEvaluationAgent'.
     4. Return the final result in JSON format.
     `,
+    tools: [prepareEvaluationTool],
     subAgents: [SequentialEvaluationAgent],
 });
