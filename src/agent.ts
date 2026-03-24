@@ -1,5 +1,6 @@
 import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
+import { createAnitPatternsAgent } from './sub-agents/anit-patterns-agent.js';
 import { createAuditAndUploadAgents, createMergerAgent } from './sub-agents/audit-and-upload-agents.js';
 import { createDecisionTreeAgent } from './sub-agents/decision-agent.js';
 import {
@@ -53,38 +54,38 @@ const prepareEvaluationTool = new FunctionTool({
     },
 });
 
-const injectStateTool = new FunctionTool({
-    name: 'inject_test_state',
-    description: 'Injects mock data into the session state for testing.',
-    parameters: z.object({}),
-    execute: async (_, context) => {
-        if (!context) {
-            return;
-        }
+// const injectStateTool = new FunctionTool({
+//     name: 'inject_test_state',
+//     description: 'Injects mock data into the session state for testing.',
+//     parameters: z.object({}),
+//     execute: async (_, context) => {
+//         if (!context) {
+//             return;
+//         }
 
-        context?.state.set(ANTI_PATTERNS_KEY, {
-            isChatbot: false,
-            isSingleAPI: false,
-            isHighVolume: false,
-            isWorkflow: false,
-            isSafetyCritical: false,
-        });
-        return { status: 'Mock data injected successfully.' };
-    },
-});
+//         context?.state.set(ANTI_PATTERNS_KEY, {
+//             isChatbot: false,
+//             isSingleAPI: false,
+//             isHighVolume: false,
+//             isWorkflow: false,
+//             isSafetyCritical: false,
+//         });
+//         return { status: 'Mock data injected successfully.' };
+//     },
+// });
 
-const betterMockSetupAgent = new LlmAgent({
-    name: 'SetupAgent',
-    model,
-    instruction: `You are a test setup agent. You must call the 'inject_test_state' tool immediately, then say
-    'Setup complete'.`,
-    tools: [injectStateTool],
-});
+// const betterMockSetupAgent = new LlmAgent({
+//     name: 'SetupAgent',
+//     model,
+//     instruction: `You are a test setup agent. You must call the 'inject_test_state' tool immediately, then say
+//     'Setup complete'.`,
+//     tools: [injectStateTool],
+// });
 
 function createSubAgents(model: string) {
     return [
         createProjectAgent(model),
-        betterMockSetupAgent,
+        createAnitPatternsAgent(model),
         createDecisionTreeAgent(model),
         createRecommendationAgent(model),
         createAuditAndUploadAgents(model),

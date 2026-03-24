@@ -73,7 +73,7 @@ const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
         return undefined;
     }
 
-    // Short-circuit if intent is incomplete, and escalate to break the loop.
+    // Short-circuit if project is incomplete, and escalate to break the loop.
     context.actions.escalate = true;
     return {
         content: {
