@@ -74,7 +74,7 @@ const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
     }
 
     // Short-circuit if project is incomplete, and escalate to break the loop.
-    context.actions.escalate = true;
+    // context.actions.escalate = true;
     return {
         content: {
             role: 'model',
@@ -99,8 +99,8 @@ export function createDecisionTreeAgent(model: string) {
         beforeModelCallback,
         instruction: (context) => {
             const { project, antiPatterns } = getEvaluationContext(context);
-            const isIntentComplete = isProjectDetailsFilled(project);
-            if (project && isIntentComplete && antiPatterns) {
+            const { isCompleted } = isProjectDetailsFilled(project);
+            if (project && isCompleted && antiPatterns) {
                 return generateDecisionPrompt(project);
             }
 

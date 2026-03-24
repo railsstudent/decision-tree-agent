@@ -1,8 +1,6 @@
 import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
-import { createAnitPatternsAgent } from './sub-agents/anit-patterns-agent.js';
-import { createAuditAndUploadAgents, createMergerAgent } from './sub-agents/audit-and-upload-agents.js';
-import { createDecisionTreeAgent } from './sub-agents/decision-agent.js';
+import { initWorkflowAgent } from './init.js';
 import {
     ANTI_PATTERNS_KEY,
     AUDIT_TRAIL_KEY,
@@ -14,8 +12,6 @@ import {
     RECOMMENDATION_KEY,
     VALIDATION_ATTEMPTS_KEY,
 } from './sub-agents/output_keys.js';
-import { createProjectAgent } from './sub-agents/project-agent.js';
-import { createRecommendationAgent } from './sub-agents/recommendation-agent.js';
 
 process.loadEnvFile();
 
@@ -82,20 +78,9 @@ const prepareEvaluationTool = new FunctionTool({
 //     tools: [injectStateTool],
 // });
 
-function createSubAgents(model: string) {
-    return [
-        createProjectAgent(model),
-        createAnitPatternsAgent(model),
-        createDecisionTreeAgent(model),
-        createRecommendationAgent(model),
-        createAuditAndUploadAgents(model),
-        createMergerAgent(model),
-    ];
-}
-
 export const SequentialEvaluationAgent = new SequentialAgent({
     name: 'SequentialEvaluationAgent',
-    subAgents: createSubAgents(model),
+    subAgents: initWorkflowAgent(model),
     description: `
         A sequential pipeline that takes a validated project description and evaluates its suitability for an AI agent architecture. 
         It breaks down the project components, applies decision-tree logic, generates an architectural recommendation, and returns a finalized, merged JSON report.

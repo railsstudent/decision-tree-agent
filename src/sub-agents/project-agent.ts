@@ -1,5 +1,5 @@
 import { BeforeModelCallback, FunctionTool, LlmAgent } from '@google/adk';
-import { PROJECT_DESCRIPTION_KEY, PROJECT_KEY, VALIDATION_ATTEMPTS_KEY } from './output_keys.js';
+import { PROJECT_KEY, VALIDATION_ATTEMPTS_KEY } from './output_keys.js';
 import { generateProjectBreakdownPrompt } from './prompts/project.prompt.js';
 import { projectSchema } from './types/index.js';
 import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
@@ -89,13 +89,12 @@ export function createProjectAgent(model: string) {
             'Analyzes a project description to extract and structure its core components: the task, the underlying problem, the ultimate goal, and any constraints.',
         beforeModelCallback,
         instruction: (context) => {
-            if (!context || !context.state) {
+            const { projectDescription } = getEvaluationContext(context);
+            if (!projectDescription) {
                 return '';
             }
 
-            const description = context.state.get<string>(PROJECT_DESCRIPTION_KEY, '') || '';
-
-            return generateProjectBreakdownPrompt(description);
+            return generateProjectBreakdownPrompt(projectDescription);
         },
         tools: [validateProjectTool],
         outputSchema: projectSchema,

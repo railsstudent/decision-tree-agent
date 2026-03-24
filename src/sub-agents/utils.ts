@@ -4,6 +4,7 @@ import {
     AUDIT_TRAIL_KEY,
     CLOUD_STORAGE_KEY,
     DECISION_KEY,
+    PROJECT_DESCRIPTION_KEY,
     PROJECT_KEY,
     RECOMMENDATION_KEY,
 } from './output_keys.js';
@@ -16,6 +17,7 @@ export function getEvaluationContext(context: ReadonlyContext | undefined) {
             antiPatterns: null,
             decision: null,
             recommendation: null,
+            projectDescription: null,
         };
     }
 
@@ -25,6 +27,7 @@ export function getEvaluationContext(context: ReadonlyContext | undefined) {
         antiPatterns: state.get<AntiPatterns>(ANTI_PATTERNS_KEY) ?? null,
         decision: state.get<Decision>(DECISION_KEY) ?? null,
         recommendation: state.get<Recommendation>(RECOMMENDATION_KEY) ?? null,
+        projectDescription: context.state.get<string>(PROJECT_DESCRIPTION_KEY, '') ?? null,
     };
 }
 
@@ -49,13 +52,13 @@ export function isProjectDetailsFilled(project: Project | null) {
     if (!project) {
         return {
             isCompleted: false,
-            isMissingData: false,
             project: null,
         };
     }
+
+    const isCompleted = project.constraint && project.goal && project.problem && project.task;
     return {
-        isCompleted: project.constraint && project.goal && project.problem && project.task,
-        isMissingData: !project.constraint || !project.goal || !project.problem || !project.task,
+        isCompleted,
         project,
     };
 }

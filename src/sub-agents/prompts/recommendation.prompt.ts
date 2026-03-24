@@ -1,7 +1,7 @@
 import { AntiPatterns, Decision, Project } from '../types/index.js';
 
 export function generateRecommendationPrompt(
-    intent: Project | undefined,
+    project: Project | undefined,
     antiPatterns: AntiPatterns | undefined,
     decision: Decision | undefined,
 ) {
@@ -31,7 +31,7 @@ export function generateRecommendationPrompt(
 
     ### INPUT DATA (READ-ONLY)
     The following data has been retrieved from the session state for this project. You MUST use ONLY this data and MUST NOT hallucinate or invent any project details:
-    - INTENT: ${JSON.stringify(intent)}
+    - PROJECT: ${JSON.stringify(project)}
     - ANTI-PATTERNS: ${JSON.stringify(antiPatterns)}
     - DECISION: ${JSON.stringify(decision)}
 
@@ -46,20 +46,20 @@ export function generateRecommendationPrompt(
     - The Markdown string MUST contain:
         - Main Heading: "## Recommendation".
         - Content:
-            - You MUST start the content with 1 to 2 sentences that concisely summarize the task, goal, problem, and constraint found in the INTENT object.
+            - You MUST start the content with 1 to 2 sentences that concisely summarize the task, goal, problem, and constraint found in the PROJECT object.
             - Follow this with 1 to 2 short, concise paragraphs summarizing the architectural recommendation based on the logic guidelines above.
             - Summary: A heading "### Key points" followed by a bulleted list of technical rationales.
     `;
 }
 
-export function generateFailedDecisionPrompt(intent: Project | undefined) {
+export function generateFailedDecisionPrompt(project: Project | undefined) {
     return `
     Your task is to generate a recommendation report.
     However, a decision cannot be reached.
     
     ### INPUT DATA (READ-ONLY)
     The following data has been retrieved from the session state for this project. You MUST use ONLY this data and MUST NOT hallucinate or invent any project details:
-    - INTENT: ${JSON.stringify(intent)}
+    - PROJECT: ${JSON.stringify(project)}
 
     ### OUTPUT FORMAT
     - You MUST populate the 'text' property of the output schema with a Markdown formatted string following this exact structure:
@@ -67,10 +67,10 @@ export function generateFailedDecisionPrompt(intent: Project | undefined) {
         - Main Heading: "## Recommendation".
         - Content:
             - [Write a dynamic response based on the following logic]
-                - Check the provided INTENT data. If any required properties (goal, task, problem, constraint) are missing, empty, or "unknown":
-                    1. State clearly that an architectural decision cannot be reached due to incomplete INTENT data.
+                - Check the provided PROJECT data. If any required properties (goal, task, problem, constraint) are missing, empty, or "unknown":
+                    1. State clearly that an architectural decision cannot be reached due to incomplete PROJECT data.
                     2. Explicitly name the missing or empty properties (e.g., "The 'goal' and 'constraint' properties are missing.").
-                    3. Write 1 to 2 short sentences explaining that a complete understanding of the user's intent is necessary to recommend the correct architecture.
-                - If all INTENT properties appear to be filled in, output exactly: "Decision cannot be reached."
+                    3. Write 1 to 2 short sentences explaining that a complete understanding of the user's PROJECT is necessary to recommend the correct architecture.
+                - If all PROJECT properties appear to be filled in, output exactly: "Decision cannot be reached."
     `;
 }
