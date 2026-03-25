@@ -60,7 +60,7 @@ export function createAuditAndUploadAgents(model: string) {
         name: 'AuditTrailAgent',
         model,
         description:
-            'Specialized agent responsible for validating and formatting the audit trail data before persistence.',
+            'Validates and formats the evaluation session data into a structured audit record before persisting it to the system logs.',
         instruction: async (context) => {
             const { project: intent, antiPatterns, decision } = getEvaluationContext(context);
             return `
@@ -85,7 +85,8 @@ export function createAuditAndUploadAgents(model: string) {
     const cloudStorageAgent = new LlmAgent({
         name: 'CloudStorageAgent',
         model,
-        description: 'Agent responsible for the secure cloud upload process.',
+        description:
+            'Manages the secure generation and upload of the final architectural recommendation report to cloud-based storage.',
         instruction: (context) => {
             const { recommendation } = getEvaluationContext(context);
 
@@ -109,7 +110,7 @@ export function createAuditAndUploadAgents(model: string) {
     const parallelAuditReportAgent = new ParallelAgent({
         name: 'ParallelAuditReportAgent',
         description:
-            'Orchestrates the concurrent execution of audit logging and report storage to optimize workflow latency.',
+            'Orchestrates the concurrent execution of the audit logging and report storage sub-agents to optimize workflow latency.',
         subAgents: [auditAgent, cloudStorageAgent],
     });
 
@@ -145,7 +146,7 @@ export function createMergerAgent(model: string) {
         name: 'MergerAgent',
         model,
         description:
-            'Final aggregator agent that synthesizes disparate process results into a cohesive, schema-validated JSON response for the end user.',
+            'Aggregates the asynchronous results from the audit trail, cloud storage, and recommendation phases into a cohesive, schema-validated JSON response for the user.',
         instruction: `
             Your strict requirement is to call the 'merge_results' tool to retrieve the necessary data.
             Do NOT attempt to guess or generate the output yourself.

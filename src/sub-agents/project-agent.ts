@@ -86,7 +86,7 @@ export function createProjectAgent(model: string) {
         name: 'ProjectAgent',
         model,
         description:
-            'Analyzes a project description to extract and structure its core components: the task, the underlying problem, the ultimate goal, and any constraints.',
+            'Analyzes the user-provided project description to extract and structure its core components, including the primary task, underlying problem, ultimate goal, and architectural constraints.',
         beforeModelCallback,
         instruction: (context) => {
             const { projectDescription } = getEvaluationContext(context);

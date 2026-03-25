@@ -48,7 +48,7 @@ export function createRecommendationAgent(model: string) {
         name: 'RecommendationAgent',
         model,
         description:
-            'Generates a recommendation report based on the user intent, identified anti-patterns, and architectural decision found in the session state.',
+            'Synthesizes the extracted project components, identified anti-patterns, and decision tree verdict into a comprehensive architectural recommendation report.',
         beforeModelCallback,
         instruction: (context) => {
             const { project, antiPatterns, decision } = getEvaluationContext(context);

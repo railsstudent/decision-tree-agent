@@ -95,7 +95,7 @@ export function createDecisionTreeAgent(model: string) {
         name: 'DecisionTreeAgent',
         model,
         description:
-            'Evaluates the user intent against the Agent Fundamentals decision tree to determine the optimal architectural solution.',
+            'Evaluates the structured project components against the Agent Fundamentals decision tree to determine the optimal architectural solution (e.g., Use Agent, Use LLM, Use Workflow Automation, or Use Simple API).',
         beforeModelCallback,
         instruction: (context) => {
             const { project, antiPatterns } = getEvaluationContext(context);
