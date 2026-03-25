@@ -53,12 +53,28 @@ export function isProjectDetailsFilled(project: Project | null) {
         return {
             isCompleted: false,
             project: null,
+            missingFields: [],
         };
     }
 
     const isCompleted = project.constraint && project.goal && project.problem && project.task;
+    const missingFields: string[] = [];
+    if (!project.constraint) {
+        missingFields.push('constraint');
+    }
+    if (!project.goal) {
+        missingFields.push('goal');
+    }
+    if (!project.problem) {
+        missingFields.push('problem');
+    }
+    if (!project.task) {
+        missingFields.push('task');
+    }
+
     return {
         isCompleted,
         project,
+        missingFields,
     };
 }

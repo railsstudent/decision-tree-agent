@@ -50,34 +50,6 @@ const prepareEvaluationTool = new FunctionTool({
     },
 });
 
-// const injectStateTool = new FunctionTool({
-//     name: 'inject_test_state',
-//     description: 'Injects mock data into the session state for testing.',
-//     parameters: z.object({}),
-//     execute: async (_, context) => {
-//         if (!context) {
-//             return;
-//         }
-
-//         context?.state.set(ANTI_PATTERNS_KEY, {
-//             isChatbot: false,
-//             isSingleAPI: false,
-//             isHighVolume: false,
-//             isWorkflow: false,
-//             isSafetyCritical: false,
-//         });
-//         return { status: 'Mock data injected successfully.' };
-//     },
-// });
-
-// const betterMockSetupAgent = new LlmAgent({
-//     name: 'SetupAgent',
-//     model,
-//     instruction: `You are a test setup agent. You must call the 'inject_test_state' tool immediately, then say
-//     'Setup complete'.`,
-//     tools: [injectStateTool],
-// });
-
 export const SequentialEvaluationAgent = new SequentialAgent({
     name: 'SequentialEvaluationAgent',
     subAgents: initWorkflowAgent(model),

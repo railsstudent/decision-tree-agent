@@ -53,12 +53,12 @@ export function createRecommendationAgent(model: string) {
         instruction: (context) => {
             const { project, antiPatterns, decision } = getEvaluationContext(context);
             console.log('RecommendationAgent', project, antiPatterns, decision);
-            const { isCompleted } = isProjectDetailsFilled(project);
+            const { isCompleted, missingFields } = isProjectDetailsFilled(project);
 
             if (project) {
                 if (!isCompleted && decision && decision.verdict === 'None') {
                     console.log('RecommendationAgent -> generateFailedDecisionPrompt');
-                    return generateFailedDecisionPrompt(project);
+                    return generateFailedDecisionPrompt(project, missingFields);
                 } else if (isCompleted && antiPatterns && decision && decision.verdict !== 'None') {
                     console.log('RecommendationAgent -> generateRecommendationPrompt');
                     return generateRecommendationPrompt(project, antiPatterns, decision);
