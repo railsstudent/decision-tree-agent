@@ -1,7 +1,7 @@
 import { Project } from '../types/evaluation.type.js';
 
 export function generateAntiPatternsPrompt(project: Project) {
-    return `
+  return `
         You are an expert AI architecture consultant. Your task is to evaluate the project to determine if it falls under any of the common anti-patterns for Agent architectures.
 
         ### INPUT DATA (READ-ONLY)

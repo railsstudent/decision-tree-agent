@@ -1,11 +1,11 @@
 import { AntiPatterns, Decision, Project } from '../types/index.js';
 
 export function generateRecommendationPrompt(
-    project: Project | undefined,
-    antiPatterns: AntiPatterns | undefined,
-    decision: Decision | undefined,
+  project: Project | undefined,
+  antiPatterns: AntiPatterns | undefined,
+  decision: Decision | undefined,
 ) {
-    return `
+  return `
     You are an expert AI architecture consultant. Your task is to synthesize an architectural recommendation report based on Google's Agent Fundamentals.
 
     ### KNOWLEDGE BASE: AGENT FUNDAMENTALS
@@ -53,7 +53,7 @@ export function generateRecommendationPrompt(
 }
 
 export function generateFailedDecisionPrompt(project: Project, missingFields: string[]) {
-    return `
+  return `
     Your task is to generate a recommendation report explaining why an architectural decision cannot be reached.
     
     ### INPUT DATA (READ-ONLY)

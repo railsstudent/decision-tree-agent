@@ -1,5 +1,5 @@
 export function generateProjectBreakdownPrompt(description: string): string {
-    return `
+  return `
             You are an expert AI architecture consultant. Your task is to analyze the provided project description and break it down into four core components:
             1. Task: What specific action needs to be performed?
             2. Problem: What is the underlying issue or pain point being addressed?

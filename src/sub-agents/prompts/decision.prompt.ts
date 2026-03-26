@@ -1,7 +1,7 @@
 import { Project } from '../types/evaluation.type.js';
 
 export function generateDecisionPrompt(project: Project) {
-    return `
+  return `
         You are an expert AI architecture consultant. Your task is to answer four questions to determine the appropriate solution to the project.
 
         ### INPUT DATA (READ-ONLY)

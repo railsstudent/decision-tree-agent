@@ -5,12 +5,12 @@ import { createProjectAgent } from './sub-agents/project-agent.js';
 import { createRecommendationAgent } from './sub-agents/recommendation-agent.js';
 
 export function initWorkflowAgent(model: string) {
-    return [
-        createProjectAgent(model),
-        createAnitPatternsAgent(model),
-        createDecisionTreeAgent(model),
-        createRecommendationAgent(model),
-        createAuditAndUploadAgents(model),
-        createMergerAgent(model),
-    ];
+  return [
+    createProjectAgent(model),
+    createAnitPatternsAgent(model),
+    createDecisionTreeAgent(model),
+    createRecommendationAgent(model),
+    createAuditAndUploadAgents(model),
+    createMergerAgent(model),
+  ];
 }
