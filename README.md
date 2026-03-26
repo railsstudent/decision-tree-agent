@@ -12,29 +12,29 @@ An AI Agent Architectural Suitability Evaluator built with the [ADK TypeScript S
 
 1. **Clone the repository:**
 
-    ```bash
-    git clone <repository-url>
-    cd decision-tree-agent
-    ```
+   ```bash
+   git clone <repository-url>
+   cd decision-tree-agent
+   ```
 
 2. **Install dependencies:**
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 3. **Configure environment variables:**
 
-    Copy the example environment file and fill in your credentials:
+   Copy the example environment file and fill in your credentials:
 
-    ```bash
-    cp .env.example .env
-    ```
+   ```bash
+   cp .env.example .env
+   ```
 
-    Edit `.env` and provide your configuration:
-    - `GEMINI_MODEL_NAME`: The model to use (e.g., `gemini-3-flash-preview`).
-    - Provide `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, and set `GOOGLE_GENAI_USE_VERTEXAI=TRUE`.
-    - Ensure the Default compute service account of the project has Vertex AI User role.
+   Edit `.env` and provide your configuration:
+   - `GEMINI_MODEL_NAME`: The model to use (e.g., `gemini-3-flash-preview`).
+   - Provide `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, and set `GOOGLE_GENAI_USE_VERTEXAI=TRUE`.
+   - Ensure the Default compute service account of the project has Vertex AI User role.
 
 ## Running the Agent
 
@@ -64,12 +64,12 @@ This project uses a modular multi-agent architecture:
 
 - **Root Orchestrator (`project_evaluation_agent`)**: Manages the user interaction lifecycle and validates initial project descriptions.
 - **Sequential Pipeline (`SequentialEvaluationAgent`)**: A series of specialized sub-agents that process the evaluation in order:
-    - **ProjectAgent**: Breaks down the project components.
-    - **AntiPatternsAgent**: Identifies potential architectural pitfalls.
-    - **DecisionTreeAgent**: Applies core logic to determine agent suitability.
-    - **RecommendationAgent**: Generates the final architectural strategy.
-    - **AuditAndUploadAgents**: Handles logging and persistence.
-    - **MergerAgent**: Consolidates all outputs into a final JSON report.
+  - **ProjectAgent**: Breaks down the project components.
+  - **AntiPatternsAgent**: Identifies potential architectural pitfalls.
+  - **DecisionTreeAgent**: Applies core logic to determine agent suitability.
+  - **RecommendationAgent**: Generates the final architectural strategy.
+  - **AuditAndUploadAgents**: Handles logging and persistence.
+  - **MergerAgent**: Consolidates all outputs into a final JSON report.
 
 ## Available Scripts
 

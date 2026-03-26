@@ -1,9 +1,9 @@
 import { FunctionTool, LlmAgent, ParallelAgent } from '@google/adk';
 import crypto from 'node:crypto';
 import { AUDIT_TRAIL_KEY, CLOUD_STORAGE_KEY, MERGED_RESULTS_KEY } from './output_keys.js';
+import { generateMergerPrompt } from './prompts/merge.prompt.js';
 import { auditTrailSchema, cloudStorageSchema, mergerSchema } from './types/index.js';
 import { getAggregateContext, getEvaluationContext } from './utils.js';
-import { generateMergerPrompt } from './prompts/merge.prompt.js';
 
 const auditTrailTool = new FunctionTool({
   name: 'write_audit_trail',
@@ -119,17 +119,16 @@ export function createAuditAndUploadAgents(model: string) {
 }
 
 export function createMergerAgent(model: string) {
-    return new LlmAgent({
-        name: 'MergerAgent',
-        model,
-        description:
-            'Aggregates the asynchronous results from the audit trail, cloud storage, and recommendation phases into a cohesive, schema-validated JSON response for the user.',
-        instruction: (context) => {
-            const { recommendation, auditTrail, cloudStorage } = getAggregateContext(context);
-
-            return generateMergerPrompt(recommendation, auditTrail, cloudStorage);
-        },
-        outputSchema: mergerSchema,
-        outputKey: MERGED_RESULTS_KEY,
-    });
+  return new LlmAgent({
+    name: 'MergerAgent',
+    model,
+    description:
+      'Aggregates the asynchronous results from the audit trail, cloud storage, and recommendation phases into a cohesive, schema-validated JSON response for the user.',
+    instruction: (context) => {
+      const { auditTrail, recommendation, cloudStorage } = getAggregateContext(context);
+      return generateMergerPrompt(recommendation, auditTrail, cloudStorage);
+    },
+    outputSchema: mergerSchema,
+    outputKey: MERGED_RESULTS_KEY,
+  });
 }
