@@ -63,19 +63,19 @@ export function createAuditAndUploadAgents(model: string) {
     description:
       'Validates and formats the evaluation session data into a structured audit record before persisting it to the system logs.',
     instruction: async (context) => {
-      const { project: intent, antiPatterns, decision } = getEvaluationContext(context);
+      const { project, antiPatterns, decision } = getEvaluationContext(context);
       return `
                 You MUST call the 'write_audit_trail' tool.
                 Do NOT generate the final output without first calling the 'write_audit_trail' tool and waiting for its response. 
             
                 ### INPUT DATA (READ-ONLY)
                 The following data has been retrieved from the session state for this project. You MUST use ONLY this data and MUST NOT hallucinate or invent any project details:
-                - INTENT: ${JSON.stringify(intent)}
+                - PROJECT: ${JSON.stringify(project)}
                 - ANTI-PATTERNS: ${JSON.stringify(antiPatterns)}
                 - DECISION: ${JSON.stringify(decision)}
 
                 ### OUTPUT FORMAT
-                - You MUST populate these exact values with the 'status' and 'timestamp' returned by the 'write_audit_trail' tool.
+                - You MUST map the entire JSON response returned by the 'write_audit_trail' tool directly into your output schema without modification.
             `;
     },
     tools: [auditTrailTool],
