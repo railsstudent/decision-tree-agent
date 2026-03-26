@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { AUDIT_TRAIL_KEY, CLOUD_STORAGE_KEY, MERGED_RESULTS_KEY } from './output_keys.js';
 import { auditTrailSchema, cloudStorageSchema, mergerSchema } from './types/index.js';
 import { getAggregateContext, getEvaluationContext } from './utils.js';
+import { generateMergerPrompt } from './prompts/merge.prompt.js';
 
 const auditTrailTool = new FunctionTool({
   name: 'write_audit_trail',
@@ -117,44 +118,18 @@ export function createAuditAndUploadAgents(model: string) {
   return parallelAuditReportAgent;
 }
 
-export const mergerTool = new FunctionTool({
-  name: 'merge_results',
-  description:
-    'Aggregates multi-source data (Audit Trail, Cloud Storage, and Recommendations) from the session state into a unified structure.',
-  execute: async (_, context) => {
-    const timestamp = await new Promise<string>((resolve) =>
-      setTimeout(() => resolve(new Date(Date.now()).toISOString()), 1000),
-    );
-    console.log('merge_results timestamp', timestamp);
-
-    const { auditTrail, recommendation, cloudStorage } = getAggregateContext(context);
-
-    const result = {
-      timestamp,
-      auditTrail,
-      recommendation,
-      cloudStorage,
-    };
-
-    console.log('merge_results result', result);
-    return result;
-  },
-});
-
 export function createMergerAgent(model: string) {
-  return new LlmAgent({
-    name: 'MergerAgent',
-    model,
-    description:
-      'Aggregates the asynchronous results from the audit trail, cloud storage, and recommendation phases into a cohesive, schema-validated JSON response for the user.',
-    instruction: `
-            Your strict requirement is to call the 'merge_results' tool to retrieve the necessary data.
-            Do NOT attempt to guess or generate the output yourself.
-            Once you receive the response from the 'merge_results' tool, map its properties ('auditTrail', 'report',
-      and 'cloudStorage') directly to your final JSON output schema without modifying their content.
-        `,
-    outputSchema: mergerSchema,
-    outputKey: MERGED_RESULTS_KEY,
-    tools: [mergerTool],
-  });
+    return new LlmAgent({
+        name: 'MergerAgent',
+        model,
+        description:
+            'Aggregates the asynchronous results from the audit trail, cloud storage, and recommendation phases into a cohesive, schema-validated JSON response for the user.',
+        instruction: (context) => {
+            const { recommendation, auditTrail, cloudStorage } = getAggregateContext(context);
+
+            return generateMergerPrompt(recommendation, auditTrail, cloudStorage);
+        },
+        outputSchema: mergerSchema,
+        outputKey: MERGED_RESULTS_KEY,
+    });
 }

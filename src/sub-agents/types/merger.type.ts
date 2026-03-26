@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { antiPatternsSchema, decisionSchema, projectSchema } from './evaluation.type.js';
-import { recommendationSchema } from './recommendation.type.js';
 
 export const auditTrailSchema = z.object({
   intent: projectSchema.nullable(),
@@ -22,8 +21,10 @@ export const cloudStorageSchema = z.object({
 export type CloudStorage = z.infer<typeof cloudStorageSchema>;
 
 export const mergerSchema = z.object({
-  auditTrail: auditTrailSchema.nullable(),
-  report: recommendationSchema.nullable(),
-  cloudStorage: cloudStorageSchema.nullable(),
-  timestamp: z.string(),
+    // auditTrail: auditTrailSchema.nullable(),
+    // report: recommendationSchema.nullable(),
+    // cloudStorage: cloudStorageSchema.nullable(),
+    // timestamp: z.string(),
+    recommendation: z.string(),
+    summary: z.string(),
 });
