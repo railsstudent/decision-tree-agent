@@ -11,7 +11,7 @@ export function initWorkflowAgent(model: string) {
     createAnitPatternsAgent(model),
     createDecisionTreeAgent(model),
     createRecommendationAgent(model),
-    createAuditAndUploadAgents(model),
+    createAuditAndUploadAgents(),
     createMergerAgent(model),
   ];
 }
