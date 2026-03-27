@@ -1,34 +1,18 @@
-import { FunctionTool, LlmAgent, ParallelAgent } from '@google/adk';
+import {
+  BaseAgent,
+  Event,
+  FunctionTool,
+  InvocationContext,
+  LlmAgent,
+  ParallelAgent,
+  ReadonlyContext,
+  createEvent,
+  createEventActions,
+} from '@google/adk';
 import crypto from 'node:crypto';
-import { AUDIT_TRAIL_KEY, CLOUD_STORAGE_KEY, MERGED_RESULTS_KEY } from './output_keys.js';
-import { generateMergerPrompt } from './prompts/merge.prompt.js';
-import { auditTrailSchema, cloudStorageSchema, mergerSchema } from './types/index.js';
-import { getAggregateContext, getEvaluationContext } from './utils.js';
-
-const auditTrailTool = new FunctionTool({
-  name: 'write_audit_trail',
-  description:
-    'Persists a structured audit record containing the user intent, detected anti-patterns, and final architectural decision to the system logs.',
-  execute: async (_, context) => {
-    const timestamp = await new Promise<string>((resolve) =>
-      setTimeout(() => resolve(new Date(Date.now()).toISOString()), 1000),
-    );
-    console.log('write_audit_trail timestamp', timestamp);
-
-    const { project, antiPatterns, decision } = getEvaluationContext(context);
-    const status = project && antiPatterns && decision ? 'success' : 'error';
-    const result = {
-      status,
-      timestamp,
-      project,
-      antiPatterns,
-      decision,
-    };
-
-    console.log('write_audit_trail result', result);
-    return result;
-  },
-});
+import { AUDIT_TRAIL_KEY, CLOUD_STORAGE_KEY } from './output-keys.js';
+import { cloudStorageSchema } from './types/index.js';
+import { getEvaluationContext } from './utils.js';
 
 function generateURL(text: string, timestamp: string) {
   const recommendationLen = text.length;
@@ -56,33 +40,67 @@ const cloudStorageTool = new FunctionTool({
   },
 });
 
+class AuditTrailAgent extends BaseAgent {
+  constructor() {
+    super({
+      name: 'AuditTrailAgent',
+      subAgents: [],
+      description:
+        'Validates and formats the evaluation session data into a structured audit record before persisting it to the system logs.',
+    });
+  }
+
+  protected async *runAsyncImpl(context: InvocationContext): AsyncGenerator<Event, void, void> {
+    for await (const event of this.runLiveImpl(context)) {
+      yield event;
+    }
+  }
+
+  protected async *runLiveImpl(context: InvocationContext): AsyncGenerator<Event, void, void> {
+    const readonlyCtx = new ReadonlyContext(context);
+    const { project, antiPatterns, decision } = getEvaluationContext(readonlyCtx);
+
+    const timestamp = await new Promise<string>((resolve) =>
+      setTimeout(() => resolve(new Date(Date.now()).toISOString()), 1000),
+    );
+    console.log('write_audit_trail timestamp', timestamp);
+
+    const status = project && antiPatterns && decision ? 'success' : 'error';
+    const result = {
+      status,
+      timestamp,
+      project,
+      antiPatterns,
+      decision,
+    };
+
+    const branch = context.branch || '';
+    console.log('context.branch', branch);
+
+    yield createEvent({
+      invocationId: context.invocationId,
+      author: this.name,
+      branch,
+      content: {
+        role: 'model',
+        parts: [
+          {
+            text: JSON.stringify(result),
+          },
+        ],
+      },
+
+      // Mutate the session state by assing a stateDelta
+      actions: createEventActions({
+        stateDelta: {
+          [AUDIT_TRAIL_KEY]: result,
+        },
+      }),
+    });
+  }
+}
+
 export function createAuditAndUploadAgents(model: string) {
-  const auditAgent = new LlmAgent({
-    name: 'AuditTrailAgent',
-    model,
-    description:
-      'Validates and formats the evaluation session data into a structured audit record before persisting it to the system logs.',
-    instruction: async (context) => {
-      const { project, antiPatterns, decision } = getEvaluationContext(context);
-      return `
-                You MUST call the 'write_audit_trail' tool.
-                Do NOT generate the final output without first calling the 'write_audit_trail' tool and waiting for its response. 
-            
-                ### INPUT DATA (READ-ONLY)
-                The following data has been retrieved from the session state for this project. You MUST use ONLY this data and MUST NOT hallucinate or invent any project details:
-                - PROJECT: ${JSON.stringify(project)}
-                - ANTI-PATTERNS: ${JSON.stringify(antiPatterns)}
-                - DECISION: ${JSON.stringify(decision)}
-
-                ### OUTPUT FORMAT
-                - You MUST map the entire JSON response returned by the 'write_audit_trail' tool directly into your output schema without modification.
-            `;
-    },
-    tools: [auditTrailTool],
-    outputSchema: auditTrailSchema,
-    outputKey: AUDIT_TRAIL_KEY,
-  });
-
   const cloudStorageAgent = new LlmAgent({
     name: 'CloudStorageAgent',
     model,
@@ -112,23 +130,8 @@ export function createAuditAndUploadAgents(model: string) {
     name: 'ParallelAuditReportAgent',
     description:
       'Orchestrates the concurrent execution of the audit logging and report storage sub-agents to optimize workflow latency.',
-    subAgents: [auditAgent, cloudStorageAgent],
+    subAgents: [new AuditTrailAgent(), cloudStorageAgent],
   });
 
   return parallelAuditReportAgent;
-}
-
-export function createMergerAgent(model: string) {
-  return new LlmAgent({
-    name: 'MergerAgent',
-    model,
-    description:
-      'Aggregates the asynchronous results from the audit trail, cloud storage, and recommendation phases into a cohesive, schema-validated JSON response for the user.',
-    instruction: (context) => {
-      const { auditTrail, recommendation, cloudStorage } = getAggregateContext(context);
-      return generateMergerPrompt(recommendation, auditTrail, cloudStorage);
-    },
-    outputSchema: mergerSchema,
-    outputKey: MERGED_RESULTS_KEY,
-  });
 }

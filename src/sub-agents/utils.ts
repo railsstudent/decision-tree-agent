@@ -7,7 +7,7 @@ import {
   PROJECT_DESCRIPTION_KEY,
   PROJECT_KEY,
   RECOMMENDATION_KEY,
-} from './output_keys.js';
+} from './output-keys.js';
 import { AntiPatterns, AuditTrail, CloudStorage, Decision, Recommendation, Project } from './types/index.js';
 
 export function getEvaluationContext(context: ReadonlyContext | undefined) {

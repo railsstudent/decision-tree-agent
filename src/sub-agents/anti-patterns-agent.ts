@@ -1,5 +1,5 @@
 import { BeforeModelCallback, LlmAgent } from '@google/adk';
-import { ANTI_PATTERNS_KEY } from './output_keys.js';
+import { ANTI_PATTERNS_KEY } from './output-keys.js';
 import { generateAntiPatternsPrompt } from './prompts/anit-patterns.prompt.js';
 import { antiPatternsSchema } from './types/index.js';
 import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
