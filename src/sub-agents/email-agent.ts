@@ -1,26 +1,7 @@
-import { BaseAgent, Event, InvocationContext, ReadonlyContext, createEvent } from '@google/adk';
-import { getEvaluationContext, getMergerContext } from './utils.js';
-import nodemailer from 'nodemailer';
-import { marked } from 'marked';
+import { BaseAgent, Event, InvocationContext, ReadonlyContext } from '@google/adk';
+import { createEmailStatusEvent, sendEmail } from './email-util.js';
 import { SmtpConfig } from './types/email.type.js';
-
-async function sendEmail(smtpConfig: SmtpConfig, subject: string, text: string) {
-  const { host, port, user, pass, from, email: to } = smtpConfig;
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    auth: user && pass ? { user, pass } : undefined,
-    secure: false,
-  });
-
-  return transporter.sendMail({
-    from,
-    to,
-    subject,
-    text,
-    html: await marked.parse(text),
-  });
-}
+import { getEvaluationContext, getMergerContext } from './utils.js';
 
 class EmailAgent extends BaseAgent {
   readonly smtpConfig: SmtpConfig;
@@ -44,67 +25,28 @@ class EmailAgent extends BaseAgent {
     const readonlyCtx = new ReadonlyContext(context);
     const { merger } = getMergerContext(readonlyCtx);
     const { recommendation } = getEvaluationContext(readonlyCtx);
-
-    const { invocationId, branch = '' } = context;
-    const baseEvent = {
-      invocationId,
-      author: this.name,
-      branch,
-    };
-
     const recommendationText = recommendation?.text || 'No recommendation available.';
 
-    if (!merger) {
-      yield createEvent({
-        ...baseEvent,
-        content: {
-          role: 'model',
-          parts: [
-            {
-              text: JSON.stringify({
-                status: 'error',
-                recommendationText,
-              }),
-            },
-          ],
-        },
+    const emit = (status: 'success' | 'error', author: string) =>
+      createEmailStatusEvent({
+        author,
+        context,
+        status,
+        recommendationText,
       });
+
+    if (!merger) {
+      yield emit('error', this.name);
       return;
     }
 
     try {
       const emailContent = `${recommendation?.text || ''}\n\n## Summary\n\n${merger.summary}`;
       await sendEmail(this.smtpConfig, 'Project Evaluation Results', emailContent);
-      yield createEvent({
-        ...baseEvent,
-        content: {
-          role: 'model',
-          parts: [
-            {
-              text: JSON.stringify({
-                status: 'success',
-                recommendationText,
-              }),
-            },
-          ],
-        },
-      });
+      yield emit('success', this.name);
     } catch (e) {
       console.error(e);
-      yield createEvent({
-        ...baseEvent,
-        content: {
-          role: 'model',
-          parts: [
-            {
-              text: JSON.stringify({
-                status: 'error',
-                recommendationText,
-              }),
-            },
-          ],
-        },
-      });
+      yield emit('error', this.name);
     }
   }
 }
