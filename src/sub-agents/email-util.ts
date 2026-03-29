@@ -34,11 +34,13 @@ export async function sendEmail(smtpConfig: SmtpConfig, subject: string, text: s
     secure: false,
   });
 
-  return transporter.sendMail({
+  const html = await marked.parse(text);
+  const mailOptions = {
     from,
     to,
     subject,
     text,
-    html: await marked.parse(text),
-  });
+    html,
+  };
+  return transporter.sendMail(mailOptions);
 }
