@@ -6,6 +6,7 @@ An AI Agent Architectural Suitability Evaluator built with the [ADK TypeScript S
 
 - **Node.js 24 or higher** (Required by ADK TypeScript SDK)
 - **npm** (comes with Node.js)
+- **Docker and Docker Compose** (for MailHog testing)
 - A Google Cloud Project (for Vertex AI) or a Gemini API Key.
 
 ## Installation
@@ -58,11 +59,39 @@ Run the agent directly in your terminal for a text-based interaction.
 npm run cli
 ```
 
+## Testing with MailHog
+
+MailHog provides a local SMTP server and web interface to capture and view test emails without sending them to real addresses.
+
+1. **Launch Docker Desktop** (or ensure the Docker daemon is running).
+
+2. **Start MailHog:**
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. **Access the Web UI:**
+
+   Open `http://localhost:8025` in your browser to view captured emails.
+
+4. **SMTP Configuration:**
+
+   Ensure your application is configured to connect to MailHog. Copy the following SMTP settings from `.env.example` to your `.env` file (these are the defaults for MailHog):
+
+   ```env
+   # SMTP Settings (MailHog)
+   SMTP_HOST="localhost"
+   SMTP_PORT=1025
+   SMTP_USER=""
+   SMTP_PASS=""
+   ```
+
 ## Agent Architecture
 
 This project uses a modular multi-agent architecture:
 
-- **Root Orchestrator (`project_evaluation_agent`)**: Manages the user interaction lifecycle and validates initial project descriptions.
+- **Root Orchestrator (`ProjectEvaluationAgent`)**: Manages the user interaction lifecycle and validates initial project descriptions.
 - **Sequential Pipeline (`SequentialEvaluationAgent`)**: A series of specialized sub-agents that process the evaluation in order:
   - **ProjectAgent**: Breaks down the project components.
   - **AntiPatternsAgent**: Identifies potential architectural pitfalls.
