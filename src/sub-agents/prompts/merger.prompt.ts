@@ -15,13 +15,12 @@ export function generateMergerPrompt(
             - CLOUD_STORAGE: ${JSON.stringify(cloudStorage)}
 
             ### WHAT TO DO
-            1. Extract the exact text from RECOMMENDATION.text and place it into the 'recommendation' property of the output schema. If RECOMMENDATION is null, set 'recommendation' to "No recommendation available."
-            2. Generate a professional 'summary' (a brief paragraph of 2-3 sentences) detailing the administrative outcomes:
+            1. Generate a professional 'summary' (a brief paragraph of 2-3 sentences) detailing the administrative outcomes:
                - Audit Trail: State the final architectural verdict (AUDIT_TRAIL.decision.verdict) and briefly note if any anti-patterns were detected (based on AUDIT_TRAIL.antiPatterns). Confirm the evaluation was archived at AUDIT_TRAIL.timestamp. If AUDIT_TRAIL is null or status is 'error', state that the audit log could not be saved.
                - Cloud Storage: State the final storage outcome. If status is 'success', include the URL (CLOUD_STORAGE.url) and timestamp. If status is 'error' or missing, state that cloud upload failed.
 
             ### OUTPUT FORMAT
-            - You MUST populate ONLY the 'recommendation' and 'summary' properties of the output schema.
+            - You MUST populate ONLY the 'summary' properties of the output schema.
             - The 'summary' MUST be written in a professional, administrative tone.
         `;
 }

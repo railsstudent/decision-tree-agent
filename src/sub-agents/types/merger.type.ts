@@ -21,7 +21,6 @@ export const cloudStorageSchema = z.object({
 export type CloudStorage = z.infer<typeof cloudStorageSchema>;
 
 export const mergerSchema = z.object({
-  recommendation: z.string(),
   summary: z.string(),
 });
 

@@ -1,5 +1,5 @@
 import { BaseAgent, Event, InvocationContext, ReadonlyContext, createEvent } from '@google/adk';
-import { getMergerContext } from './utils.js';
+import { getEvaluationContext, getMergerContext } from './utils.js';
 import nodemailer from 'nodemailer';
 import { marked } from 'marked';
 import { SmtpConfig } from './types/email.type.js';
@@ -43,6 +43,7 @@ class EmailAgent extends BaseAgent {
   protected async *runLiveImpl(context: InvocationContext): AsyncGenerator<Event, void, void> {
     const readonlyCtx = new ReadonlyContext(context);
     const { merger } = getMergerContext(readonlyCtx);
+    const { recommendation } = getEvaluationContext(readonlyCtx);
 
     const { invocationId, branch = '' } = context;
     const baseEvent = {
@@ -50,6 +51,8 @@ class EmailAgent extends BaseAgent {
       author: this.name,
       branch,
     };
+
+    const recommendationText = recommendation?.text || 'No recommendation available.';
 
     if (!merger) {
       yield createEvent({
@@ -60,7 +63,7 @@ class EmailAgent extends BaseAgent {
             {
               text: JSON.stringify({
                 status: 'error',
-                response: `Failed to send email to ${this.smtpConfig.email}. Merger results are missing.`,
+                recommendationText,
               }),
             },
           ],
@@ -70,7 +73,7 @@ class EmailAgent extends BaseAgent {
     }
 
     try {
-      const emailContent = `${merger.recommendation}\n\n## Summary\n\n${merger.summary}`;
+      const emailContent = `${recommendation?.text || ''}\n\n## Summary\n\n${merger.summary}`;
       await sendEmail(this.smtpConfig, 'Project Evaluation Results', emailContent);
       yield createEvent({
         ...baseEvent,
@@ -80,7 +83,7 @@ class EmailAgent extends BaseAgent {
             {
               text: JSON.stringify({
                 status: 'success',
-                response: `Email sent to ${this.smtpConfig.email} with project evaluation results.`,
+                recommendationText,
               }),
             },
           ],
@@ -96,7 +99,7 @@ class EmailAgent extends BaseAgent {
             {
               text: JSON.stringify({
                 status: 'error',
-                response: `Failed to send email to ${this.smtpConfig.email} with project evaluation results.`,
+                recommendationText,
               }),
             },
           ],
