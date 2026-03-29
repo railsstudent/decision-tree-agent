@@ -68,6 +68,8 @@ export function createRecommendationAgent(model: string) {
     },
     outputSchema: recommendationSchema,
     outputKey: RECOMMENDATION_KEY,
+    disallowTransferToParent: true,
+    disallowTransferToPeers: true,
   });
 
   return recommendationAgent;

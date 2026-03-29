@@ -16,5 +16,7 @@ export function createMergerAgent(model: string) {
     },
     outputSchema: mergerSchema,
     outputKey: MERGED_RESULTS_KEY,
+    disallowTransferToParent: true,
+    disallowTransferToPeers: true,
   });
 }

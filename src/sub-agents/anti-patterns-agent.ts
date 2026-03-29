@@ -44,6 +44,8 @@ export function createAnitPatternsAgent(model: string) {
     },
     outputSchema: antiPatternsSchema,
     outputKey: ANTI_PATTERNS_KEY,
+    disallowTransferToParent: true,
+    disallowTransferToPeers: true,
   });
 
   return antiPatternsAgent;

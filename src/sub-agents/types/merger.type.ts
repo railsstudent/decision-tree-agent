@@ -24,3 +24,5 @@ export const mergerSchema = z.object({
   recommendation: z.string(),
   summary: z.string(),
 });
+
+export type Merger = z.infer<typeof mergerSchema>;

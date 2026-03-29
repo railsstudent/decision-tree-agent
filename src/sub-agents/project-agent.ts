@@ -99,6 +99,8 @@ export function createProjectAgent(model: string) {
     tools: [validateProjectTool],
     outputSchema: projectSchema,
     outputKey: PROJECT_KEY,
+    disallowTransferToParent: true,
+    disallowTransferToPeers: true,
   });
 
   return projectAgent;

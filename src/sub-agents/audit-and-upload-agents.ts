@@ -20,7 +20,6 @@ class AuditTrailAgent extends BaseAgent {
   constructor() {
     super({
       name: 'AuditTrailAgent',
-      subAgents: [],
       description:
         'Validates and formats the evaluation session data into a structured audit record before persisting it to the system logs.',
     });

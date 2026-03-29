@@ -4,11 +4,12 @@ import {
   AUDIT_TRAIL_KEY,
   CLOUD_STORAGE_KEY,
   DECISION_KEY,
+  MERGED_RESULTS_KEY,
   PROJECT_DESCRIPTION_KEY,
   PROJECT_KEY,
   RECOMMENDATION_KEY,
 } from './output-keys.js';
-import { AntiPatterns, AuditTrail, CloudStorage, Decision, Recommendation, Project } from './types/index.js';
+import { AntiPatterns, AuditTrail, CloudStorage, Decision, Recommendation, Project, Merger } from './types/index.js';
 
 export function getEvaluationContext(context: ReadonlyContext | undefined) {
   if (!context || !context.state) {
@@ -76,5 +77,18 @@ export function isProjectDetailsFilled(project: Project | null) {
     isCompleted,
     project,
     missingFields,
+  };
+}
+
+export function getMergerContext(context: ReadonlyContext | undefined) {
+  if (!context || !context.state) {
+    return {
+      merger: null,
+    };
+  }
+
+  const state = context.state;
+  return {
+    merger: state.get<Merger>(MERGED_RESULTS_KEY) ?? null,
   };
 }

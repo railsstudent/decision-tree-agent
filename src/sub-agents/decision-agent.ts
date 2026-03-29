@@ -109,6 +109,8 @@ export function createDecisionTreeAgent(model: string) {
     tools: [validateDecisionTool],
     outputSchema: decisionSchema,
     outputKey: DECISION_KEY,
+    disallowTransferToParent: true,
+    disallowTransferToPeers: true,
   });
 
   return decisionTreeAgent;

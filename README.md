@@ -85,11 +85,32 @@ MailHog provides a local SMTP server and web interface to capture and view test 
    SMTP_PORT=1025
    SMTP_USER=""
    SMTP_PASS=""
+   SMTP_FROM="no-reply@test.local"
+   ADMIN_EMAIL="admin@test.local"
    ```
 
 ## Agent Architecture
 
 This project uses a modular multi-agent architecture:
+
+```mermaid
+graph TD
+    User([User]) --> PEA[ProjectEvaluationAgent]
+    PEA --> Reset[prepare_evaluation tool]
+    Reset --> SEA[SequentialEvaluationAgent]
+
+    subgraph Pipeline [Sequential Pipeline]
+        SEA --> PA[ProjectAgent]
+        PA --> APA[AntiPatternsAgent]
+        APA --> DTA[DecisionTreeAgent]
+        DTA --> RA[RecommendationAgent]
+        RA --> AUA[AuditAndUploadAgents]
+        AUA --> MA[MergerAgent]
+        MA --> EA[EmailAgent]
+    end
+
+    EA --> Final([Final JSON Report])
+```
 
 - **Root Orchestrator (`ProjectEvaluationAgent`)**: Manages the user interaction lifecycle and validates initial project descriptions.
 - **Sequential Pipeline (`SequentialEvaluationAgent`)**: A series of specialized sub-agents that process the evaluation in order:
@@ -99,6 +120,7 @@ This project uses a modular multi-agent architecture:
   - **RecommendationAgent**: Generates the final architectural strategy.
   - **AuditAndUploadAgents**: Handles logging and persistence.
   - **MergerAgent**: Consolidates all outputs into a final JSON report.
+  - **EmailAgent**: Sends the finalized JSON report to the administrator via a configured SMTP server.
 
 ## Available Scripts
 
