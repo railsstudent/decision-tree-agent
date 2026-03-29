@@ -5,6 +5,8 @@ export const auditTrailSchema = z.object({
   project: projectSchema.nullable(),
   status: z.enum(['success', 'error']),
   timestamp: z.string(),
+  sessionId: z.string(),
+  invocationId: z.string(),
   decision: decisionSchema.nullable(),
   antiPatterns: antiPatternsSchema.nullable(),
 });

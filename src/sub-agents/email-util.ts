@@ -18,6 +18,8 @@ export function createEmailStatusEvent(options: EmailStatusOptions): Event {
           text: JSON.stringify({
             status: options.status,
             recommendationText: options.recommendationText,
+            sessionId: options.context.session.id,
+            invocationId: options.context.invocationId,
           }),
         },
       ],

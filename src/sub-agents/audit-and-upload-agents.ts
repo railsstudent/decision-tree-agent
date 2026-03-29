@@ -44,6 +44,8 @@ class AuditTrailAgent extends BaseAgent {
     const result = {
       status,
       timestamp,
+      sessionId: context.session.id,
+      invocationId: context.invocationId,
       project,
       antiPatterns,
       decision,
