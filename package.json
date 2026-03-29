@@ -11,6 +11,7 @@
     "build": "npx tsc --project tsconfig.json",
     "cli": "npm run build && npx @google/adk-devtools run dist/agent.js",
     "web": "npm run build && npx @google/adk-devtools web --host 127.0.0.1 dist/agent.js",
+    "serve": "npm run build && npx @google/adk-devtools api_server --host 127.0.0.1 dist/agent.js",
     "prepare": "husky",
     "lint-staged": "lint-staged --allow-empty",
     "format": "prettier . --write"

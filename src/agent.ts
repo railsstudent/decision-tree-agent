@@ -60,7 +60,7 @@ export const SequentialEvaluationAgent = new SequentialAgent({
 });
 
 export const rootAgent = new LlmAgent({
-  name: 'project_evaluation_agent',
+  name: 'ProjectEvaluationAgent',
   model,
   description:
     'The primary orchestrator agent that manages user interaction and controls the evaluation lifecycle for AI agent architectural suitability.',

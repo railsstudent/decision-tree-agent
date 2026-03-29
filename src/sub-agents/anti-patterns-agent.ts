@@ -42,7 +42,6 @@ export function createAnitPatternsAgent(model: string) {
 
       return 'Skipping LLM due to incomplete project breakdown data.';
     },
-    tools: [],
     outputSchema: antiPatternsSchema,
     outputKey: ANTI_PATTERNS_KEY,
   });
