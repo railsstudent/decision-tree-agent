@@ -6,3 +6,8 @@ services:
       - "1025:1025" # SMTP port
       - "8025:8025" # HTTP (Web UI) port
     restart: always
+    networks:
+      - decision-tree-agent-network
+
+networks:
+  decision-tree-agent-network:
