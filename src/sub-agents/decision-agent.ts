@@ -96,6 +96,15 @@ export function createDecisionTreeAgent(model: string) {
     model,
     description:
       'Evaluates the structured project components against the Agent Fundamentals decision tree to determine the optimal architectural solution (e.g., Use Agent, Use LLM, Use Workflow Automation, or Use Simple API).',
+    beforeAgentCallback: async (context) => {
+      if (!context || !context.state) {
+        return undefined;
+      }
+
+      context.state.set(VALIDATION_ATTEMPTS_KEY, 0);
+      console.log('Initialized VALIDATION_ATTEMPTS to 0 in beforeAgentCallback');
+      return undefined;
+    },
     beforeModelCallback,
     instruction: (context) => {
       const { project, antiPatterns } = getEvaluationContext(context);
