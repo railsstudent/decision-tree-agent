@@ -12,43 +12,39 @@ export const validateProjectTool = new FunctionTool({
   parameters: projectSchema,
   execute: async ({ task, problem, goal, constraint }, toolContext) => {
     // Track the number of validation attempts in the session state
-    let attempts = toolContext?.state.get<number>('VALIDATION_ATTEMPTS') || 0;
+    let attempts = toolContext?.state.get<number>(VALIDATION_ATTEMPTS_KEY) || 0;
     attempts = attempts + 1;
     if (toolContext) {
       toolContext.state.set(VALIDATION_ATTEMPTS_KEY, attempts);
     }
 
-    if (attempts >= MAX_ITERATIONS) {
-      console.log(`Max validation attempts reached (${attempts}). Forcing LLM to terminate.`);
-      if (toolContext) {
-        // Break the internal LLM tool-calling loop
-        toolContext.actions.escalate = true;
-      }
-      return {
-        status: 'FATAL_ERROR',
-        message: `STOP processing immediately. Max validation attempts reached. Return the most accurate data found so far or empty strings if none.`,
-      };
+    let missingFieldMessage: string | null = null;
+    if (!task) {
+      missingFieldMessage =
+        "Missing 'task'. Please provide a concise description of the specific action to be performed.";
+    } else if (!problem) {
+      missingFieldMessage = "Missing 'problem'. Please describe the underlying issue or pain point.";
+    } else if (!goal) {
+      missingFieldMessage = "Missing 'goal'. Please specify the desired outcome or objective.";
+    } else if (!constraint) {
+      missingFieldMessage = "Missing 'constraint'. Please list any limitations, requirements, or boundaries.";
     }
 
-    if (!task) {
+    if (missingFieldMessage) {
+      if (attempts >= MAX_ITERATIONS) {
+        console.log(`Max validation attempts reached (${attempts}). Forcing LLM to terminate.`);
+        if (toolContext) {
+          // Break the internal LLM tool-calling loop
+          toolContext.actions.escalate = true;
+        }
+        return {
+          status: 'FATAL_ERROR',
+          message: `STOP processing immediately. Max validation attempts reached. Return the most accurate data found so far or empty strings if none.`,
+        };
+      }
       return {
         status: 'ERROR',
-        message: "Missing 'task'. Please provide a concise description of the specific action to be performed.",
-      };
-    } else if (!problem) {
-      return {
-        status: 'ERROR',
-        message: "Missing 'problem'. Please describe the underlying issue or pain point.",
-      };
-    } else if (!goal) {
-      return {
-        status: 'ERROR',
-        message: "Missing 'goal'. Please specify the desired outcome or objective.",
-      };
-    } else if (!constraint) {
-      return {
-        status: 'ERROR',
-        message: "Missing 'constraint'. Please list any limitations, requirements, or boundaries.",
+        message: missingFieldMessage,
       };
     }
 
