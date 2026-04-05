@@ -38,7 +38,7 @@ const prepareEvaluationTool = new FunctionTool({
   },
 });
 
-export const SequentialEvaluationAgent = new SequentialAgent({
+export const sequentialEvaluationAgent = new SequentialAgent({
   name: 'SequentialEvaluationAgent',
   subAgents: initWorkflowAgent(model),
   description: `
@@ -84,5 +84,5 @@ export const rootAgent = new LlmAgent({
     4. Return the final result in JSON format.
     `,
   tools: [prepareEvaluationTool],
-  subAgents: [SequentialEvaluationAgent],
+  subAgents: [sequentialEvaluationAgent],
 });
