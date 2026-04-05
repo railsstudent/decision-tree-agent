@@ -1,4 +1,5 @@
 import { BeforeModelCallback, LlmAgent } from '@google/adk';
+import { agentEndCallback, agentStartCallback } from './callbacks/performance-callback.js';
 import { RECOMMENDATION_KEY } from './output-keys.const.js';
 import { generateFailedDecisionPrompt, generateRecommendationPrompt } from './prompts/recommendation.prompt.js';
 import { recommendationSchema } from './types/index.js';
@@ -50,9 +51,9 @@ export function createRecommendationAgent(model: string) {
     description:
       'Synthesizes the extracted project components, identified anti-patterns, and decision tree verdict into a comprehensive architectural recommendation report.',
     beforeModelCallback,
+    beforeAgentCallback: agentStartCallback,
     instruction: (context) => {
       const { project, antiPatterns, decision } = getEvaluationContext(context);
-      console.log('RecommendationAgent', project, antiPatterns, decision);
       const { isCompleted, missingFields } = isProjectDetailsFilled(project);
 
       if (project) {
@@ -66,6 +67,7 @@ export function createRecommendationAgent(model: string) {
       }
       return 'Skipping LLM due to missing data.';
     },
+    afterAgentCallback: agentEndCallback,
     outputSchema: recommendationSchema,
     outputKey: RECOMMENDATION_KEY,
     disallowTransferToParent: true,

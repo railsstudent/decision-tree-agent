@@ -1,6 +1,7 @@
-import { BeforeModelCallback, FunctionTool, LlmAgent } from '@google/adk';
+import { BeforeModelCallback, Context, FunctionTool, LlmAgent } from '@google/adk';
 import { z } from 'zod';
 import { createAfterToolCallback } from './callbacks/after-tool-retry-callback.js';
+import { agentEndCallback, agentStartCallback } from './callbacks/performance-callback.js';
 import { DECISION_KEY, VALIDATION_ATTEMPTS_KEY } from './output-keys.const.js';
 import { generateDecisionPrompt } from './prompts/decision.prompt.js';
 import { decisionSchema } from './types/index.js';
@@ -49,8 +50,6 @@ const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
   }
 
   const { project, antiPatterns } = getEvaluationContext(context);
-
-  console.log('in evaluation -> beforeModelCallback');
   const { isCompleted } = isProjectDetailsFilled(project);
 
   if (isCompleted && antiPatterns) {
@@ -74,23 +73,25 @@ const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
   };
 };
 
+const resetAttemptsCallback = (context: Context) => {
+  if (!context || !context.state) {
+    return undefined;
+  }
+
+  context.state.set(VALIDATION_ATTEMPTS_KEY, 0);
+  console.log('Initialized VALIDATION_ATTEMPTS to 0 in beforeAgentCallback');
+
+  return undefined;
+};
+
 export function createDecisionTreeAgent(model: string) {
   const decisionTreeAgent = new LlmAgent({
     name: 'DecisionTreeAgent',
     model,
     description:
       'Evaluates the structured project components against the Agent Fundamentals decision tree to determine the optimal architectural solution (e.g., Use Agent, Use LLM, Use Workflow Automation, or Use Simple API).',
-    beforeAgentCallback: async (context) => {
-      if (!context || !context.state) {
-        return undefined;
-      }
-
-      context.state.set(VALIDATION_ATTEMPTS_KEY, 0);
-      console.log('Initialized VALIDATION_ATTEMPTS to 0 in beforeAgentCallback');
-      return undefined;
-    },
+    beforeAgentCallback: [resetAttemptsCallback, agentStartCallback],
     beforeModelCallback,
-    afterToolCallback: decisionAfterToolCallback,
     instruction: (context) => {
       const { project, antiPatterns } = getEvaluationContext(context);
       const { isCompleted } = isProjectDetailsFilled(project);
@@ -100,6 +101,8 @@ export function createDecisionTreeAgent(model: string) {
 
       return 'Skipping LLM due to incomplete INTENT data.';
     },
+    afterToolCallback: decisionAfterToolCallback,
+    afterAgentCallback: agentEndCallback,
     tools: [validateDecisionTool],
     outputSchema: decisionSchema,
     outputKey: DECISION_KEY,

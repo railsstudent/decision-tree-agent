@@ -3,7 +3,7 @@ import { VALIDATION_ATTEMPTS_KEY } from '../output-keys.const.js';
 import { MAX_ITERATIONS } from '../validation.const.js';
 
 export function createAfterToolCallback(fatalErrorMessage: string, maxAttempts = MAX_ITERATIONS): AfterToolCallback {
-  return async ({ tool, context, response }) => {
+  return ({ tool, context, response }) => {
     const toolName = tool.name;
     const agentName = context.agentName;
     const state = context.state;

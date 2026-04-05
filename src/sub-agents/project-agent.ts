@@ -1,5 +1,6 @@
 import { BeforeModelCallback, FunctionTool, LlmAgent } from '@google/adk';
 import { createAfterToolCallback } from './callbacks/after-tool-retry-callback.js';
+import { agentEndCallback, agentStartCallback } from './callbacks/performance-callback.js';
 import { PROJECT_KEY } from './output-keys.const.js';
 import { generateProjectBreakdownPrompt } from './prompts/project.prompt.js';
 import { projectSchema } from './types/index.js';
@@ -41,7 +42,7 @@ export const validateProjectTool = new FunctionTool({
   },
 });
 
-const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
+const beforeModelCallback: BeforeModelCallback = ({ context }) => {
   // If we already have a valid project breakdown (e.g., from a previous loop iteration), stop the loop.
   const { project } = getEvaluationContext(context);
   const { isCompleted } = isProjectDetailsFilled(project);
@@ -68,6 +69,7 @@ export function createProjectAgent(model: string) {
     model,
     description:
       'Analyzes the user-provided project description to extract and structure its core components, including the primary task, underlying problem, ultimate goal, and architectural constraints.',
+    beforeAgentCallback: agentStartCallback,
     beforeModelCallback,
     instruction: (context) => {
       const { projectDescription } = getEvaluationContext(context);
@@ -78,6 +80,7 @@ export function createProjectAgent(model: string) {
       return generateProjectBreakdownPrompt(projectDescription);
     },
     afterToolCallback: projectAfterToolCallback,
+    afterAgentCallback: agentEndCallback,
     tools: [validateProjectTool],
     outputSchema: projectSchema,
     outputKey: PROJECT_KEY,
