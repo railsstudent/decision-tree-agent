@@ -8,7 +8,7 @@ import {
   createEventActions,
 } from '@google/adk';
 import crypto from 'node:crypto';
-import { AUDIT_TRAIL_KEY, CLOUD_STORAGE_KEY } from './output-keys.js';
+import { AUDIT_TRAIL_KEY, CLOUD_STORAGE_KEY } from './output-keys.const.js';
 import { getEvaluationContext } from './utils.js';
 
 function generateURL(text: string, timestamp: string) {

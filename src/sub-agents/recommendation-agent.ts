@@ -1,5 +1,5 @@
 import { BeforeModelCallback, LlmAgent } from '@google/adk';
-import { RECOMMENDATION_KEY } from './output-keys.js';
+import { RECOMMENDATION_KEY } from './output-keys.const.js';
 import { generateFailedDecisionPrompt, generateRecommendationPrompt } from './prompts/recommendation.prompt.js';
 import { recommendationSchema } from './types/index.js';
 import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';

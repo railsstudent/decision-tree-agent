@@ -11,7 +11,7 @@ import {
   PROJECT_KEY,
   RECOMMENDATION_KEY,
   VALIDATION_ATTEMPTS_KEY,
-} from './sub-agents/output-keys.js';
+} from './sub-agents/output-keys.const.js';
 
 process.loadEnvFile();
 

@@ -1,5 +1,5 @@
 import { LlmAgent } from '@google/adk';
-import { MERGED_RESULTS_KEY } from './output-keys.js';
+import { MERGED_RESULTS_KEY } from './output-keys.const.js';
 import { generateMergerPrompt } from './prompts/merger.prompt.js';
 import { mergerSchema } from './types/index.js';
 import { getAggregateContext } from './utils.js';

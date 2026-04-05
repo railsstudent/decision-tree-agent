@@ -1,11 +1,10 @@
 import { BeforeModelCallback, FunctionTool, LlmAgent } from '@google/adk';
 import { z } from 'zod';
-import { DECISION_KEY, VALIDATION_ATTEMPTS_KEY } from './output-keys.js';
+import { DECISION_KEY, VALIDATION_ATTEMPTS_KEY } from './output-keys.const.js';
 import { generateDecisionPrompt } from './prompts/decision.prompt.js';
 import { decisionSchema } from './types/index.js';
 import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
-
-const MAX_ITERATIONS = 3;
+import { MAX_ITERATIONS } from './validation.const.js';
 
 export const validateDecisionTool = new FunctionTool({
   name: 'validate_decision',

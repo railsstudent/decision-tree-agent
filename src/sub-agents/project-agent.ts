@@ -1,10 +1,9 @@
 import { BeforeModelCallback, FunctionTool, LlmAgent } from '@google/adk';
-import { PROJECT_KEY, VALIDATION_ATTEMPTS_KEY } from './output-keys.js';
+import { PROJECT_KEY, VALIDATION_ATTEMPTS_KEY } from './output-keys.const.js';
 import { generateProjectBreakdownPrompt } from './prompts/project.prompt.js';
 import { projectSchema } from './types/index.js';
 import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
-
-const MAX_ITERATIONS = 3;
+import { MAX_ITERATIONS } from './validation.const.js';
 
 export const validateProjectTool = new FunctionTool({
   name: 'validate_project',
