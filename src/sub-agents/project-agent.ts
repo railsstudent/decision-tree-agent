@@ -1,23 +1,20 @@
 import { BeforeModelCallback, FunctionTool, LlmAgent } from '@google/adk';
-import { PROJECT_KEY, VALIDATION_ATTEMPTS_KEY } from './output-keys.const.js';
+import { createAfterToolCallback } from './callbacks/after-tool-retry-callback.js';
+import { PROJECT_KEY } from './output-keys.const.js';
 import { generateProjectBreakdownPrompt } from './prompts/project.prompt.js';
 import { projectSchema } from './types/index.js';
 import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
-import { MAX_ITERATIONS } from './validation.const.js';
+
+const projectAfterToolCallback = createAfterToolCallback(
+  `STOP processing immediately. Max validation attempts reached. Return the most accurate data found so far or empty strings if none.`,
+);
 
 export const validateProjectTool = new FunctionTool({
   name: 'validate_project',
   description:
     'Validates the LLM-generated task, problem, goal, and constraint to ensure they are not blank. Returns SUCCESS or an ERROR message.',
   parameters: projectSchema,
-  execute: async ({ task, problem, goal, constraint }, toolContext) => {
-    // Track the number of validation attempts in the session state
-    let attempts = toolContext?.state.get<number>(VALIDATION_ATTEMPTS_KEY) || 0;
-    attempts = attempts + 1;
-    if (toolContext) {
-      toolContext.state.set(VALIDATION_ATTEMPTS_KEY, attempts);
-    }
-
+  execute: async ({ task, problem, goal, constraint }) => {
     let missingFieldMessage: string | null = null;
     if (!task) {
       missingFieldMessage =
@@ -31,17 +28,6 @@ export const validateProjectTool = new FunctionTool({
     }
 
     if (missingFieldMessage) {
-      if (attempts >= MAX_ITERATIONS) {
-        console.log(`Max validation attempts reached (${attempts}). Forcing LLM to terminate.`);
-        if (toolContext) {
-          // Break the internal LLM tool-calling loop
-          toolContext.actions.escalate = true;
-        }
-        return {
-          status: 'FATAL_ERROR',
-          message: `STOP processing immediately. Max validation attempts reached. Return the most accurate data found so far or empty strings if none.`,
-        };
-      }
       return {
         status: 'ERROR',
         message: missingFieldMessage,
@@ -91,6 +77,7 @@ export function createProjectAgent(model: string) {
 
       return generateProjectBreakdownPrompt(projectDescription);
     },
+    afterToolCallback: projectAfterToolCallback,
     tools: [validateProjectTool],
     outputSchema: projectSchema,
     outputKey: PROJECT_KEY,
