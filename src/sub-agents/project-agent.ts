@@ -1,4 +1,4 @@
-import { BeforeModelCallback, FunctionTool, LlmAgent } from '@google/adk';
+import { FunctionTool, LlmAgent, SingleBeforeModelCallback } from '@google/adk';
 import { createAfterToolCallback } from './callbacks/after-tool-retry-callback.js';
 import { agentEndCallback, agentStartCallback } from './callbacks/performance-callback.js';
 import { PROJECT_KEY } from './output-keys.const.js';
@@ -42,7 +42,7 @@ export const validateProjectTool = new FunctionTool({
   },
 });
 
-const beforeModelCallback: BeforeModelCallback = ({ context }) => {
+const beforeModelCallback: SingleBeforeModelCallback = ({ context }) => {
   // If we already have a valid project breakdown (e.g., from a previous loop iteration), stop the loop.
   const { project } = getEvaluationContext(context);
   const { isCompleted } = isProjectDetailsFilled(project);

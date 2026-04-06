@@ -1,11 +1,11 @@
-import { BeforeModelCallback, LlmAgent } from '@google/adk';
+import { LlmAgent, SingleBeforeModelCallback } from '@google/adk';
 import { agentEndCallback, agentStartCallback } from './callbacks/performance-callback.js';
 import { ANTI_PATTERNS_KEY } from './output-keys.const.js';
 import { generateAntiPatternsPrompt } from './prompts/anit-patterns.prompt.js';
 import { antiPatternsSchema } from './types/index.js';
 import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
 
-const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
+const beforeModelCallback: SingleBeforeModelCallback = async ({ context }) => {
   const { project } = getEvaluationContext(context);
   const { isCompleted } = isProjectDetailsFilled(project);
 

@@ -1,4 +1,4 @@
-import { BeforeModelCallback, Context, FunctionTool, LlmAgent } from '@google/adk';
+import { Context, FunctionTool, LlmAgent, SingleBeforeModelCallback } from '@google/adk';
 import { z } from 'zod';
 import { createAfterToolCallback } from './callbacks/after-tool-retry-callback.js';
 import { agentEndCallback, agentStartCallback } from './callbacks/performance-callback.js';
@@ -33,7 +33,7 @@ export const validateDecisionTool = new FunctionTool({
   },
 });
 
-const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
+const beforeModelCallback: SingleBeforeModelCallback = async ({ context }) => {
   // If we already have a valid decision (e.g., from a previous loop iteration), stop the loop.
   const { decision } = getEvaluationContext(context);
 
