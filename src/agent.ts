@@ -22,7 +22,7 @@ if (!model) {
 
 const prepareEvaluationTool = new FunctionTool({
   name: 'prepare_evaluation',
-  description: 'Resets the session state and stores the new project description to prepare for a fresh evaluation.',
+  description: 'Stores the new project description to prepare for a fresh evaluation.',
   parameters: z.object({
     description: z.string().describe('The validated project description from the user.'),
   }),
@@ -34,7 +34,7 @@ const prepareEvaluationTool = new FunctionTool({
     // Set the new description for the ProjectAgent to find
     context.state.set(PROJECT_DESCRIPTION_KEY, description);
 
-    return { status: 'SUCCESS', message: 'State reset and description updated.' };
+    return { status: 'SUCCESS', message: 'Description updated.' };
   },
 });
 
