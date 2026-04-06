@@ -18,33 +18,30 @@ const beforeModelCallback: SingleBeforeModelCallback = async ({ context }) => {
   if ((isCompleted && antiPatterns && decision && decision.verdict !== 'None') || (!isCompleted && isDecisionNone)) {
     return undefined;
   } else if (isCompleted && isDecisionNone) {
-    return {
-      content: {
-        role: 'model',
-        parts: [
-          {
-            text: JSON.stringify({
-              text: '## Recommendation: Manual Review Required\n\n**Status:** Abnormal Case Detected\n\nThe provided project is complete and valid, but the decision tree could not reach a conclusive verdict (Result: `None`).\n\n**Possible Reasons:**\n- The requirements fall outside of known architectural patterns.\n- There are conflicting constraints and goals that cannot be resolved automatically.\n\n**Next Steps:**\n- Review and refine the constraints or goals.\n- Escalate for manual architectural review.',
-            }),
-          },
-        ],
-      },
-    };
+    return constructRecommendation(
+      '## Recommendation: Manual Review Required\n\n**Status:** Abnormal Case Detected\n\nThe provided project is complete and valid, but the decision tree could not reach a conclusive verdict (Result: `None`).\n\n**Possible Reasons:**\n- The requirements fall outside of known architectural patterns.\n- There are conflicting constraints and goals that cannot be resolved automatically.\n\n**Next Steps:**\n- Review and refine the constraints or goals.\n- Escalate for manual architectural review.',
+    );
   }
 
+  return constructRecommendation(
+    '## Recommendation: Data Required\n\n**Status:** Abnormal Case Detected\n\nNo decision is reached.',
+  );
+};
+
+function constructRecommendation(recommendation: string) {
   return {
     content: {
       role: 'model',
       parts: [
         {
           text: JSON.stringify({
-            text: '## Recommendation: Data Required\n\n**Status:** Abnormal Case Detected\n\nNo decision is reached.',
+            text: recommendation,
           }),
         },
       ],
     },
   };
-};
+}
 
 export function createRecommendationAgent(model: string) {
   const recommendationAgent = new LlmAgent({
