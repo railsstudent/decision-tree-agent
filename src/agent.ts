@@ -47,7 +47,7 @@ export const sequentialEvaluationAgent = new SequentialAgent({
     `,
 });
 
-const resetNewEvaluationCallback: SingleAgentCallback = async (context) => {
+const resetNewEvaluationCallback: SingleAgentCallback = (context) => {
   if (!context || !context.state) {
     return undefined;
   }
