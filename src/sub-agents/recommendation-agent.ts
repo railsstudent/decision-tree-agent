@@ -15,9 +15,7 @@ const beforeModelCallback: SingleBeforeModelCallback = async ({ context }) => {
     `beforeModelCallback: Agent ${context.agentName} validated project breakdown, anti-patterns, and decision before calling LLM.`,
   );
 
-  if (isCompleted && antiPatterns && decision && decision.verdict !== 'None') {
-    return undefined;
-  } else if (!isCompleted && isDecisionNone) {
+  if ((isCompleted && antiPatterns && decision && decision.verdict !== 'None') || (!isCompleted && isDecisionNone)) {
     return undefined;
   } else if (isCompleted && isDecisionNone) {
     return {
