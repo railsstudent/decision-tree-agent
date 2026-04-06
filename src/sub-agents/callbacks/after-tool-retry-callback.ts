@@ -5,7 +5,7 @@ import { MAX_ITERATIONS } from '../validation.const.js';
 export function createAfterToolCallback(fatalErrorMessage: string, maxAttempts = MAX_ITERATIONS): AfterToolCallback {
   return ({ tool, context, response }) => {
     if (!tool || !context || !context.state) {
-      throw new Error('Failed to create afterToolCallback.');
+      return undefined;
     }
 
     const toolName = tool.name;
