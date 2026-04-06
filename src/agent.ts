@@ -1,4 +1,4 @@
-import { BeforeAgentCallback, FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
+import { FunctionTool, LlmAgent, SequentialAgent, SingleAgentCallback } from '@google/adk';
 import { z } from 'zod';
 import { initWorkflowAgent } from './init.js';
 import {
@@ -47,7 +47,7 @@ export const sequentialEvaluationAgent = new SequentialAgent({
     `,
 });
 
-const beforeAgentCallback: BeforeAgentCallback = async (context) => {
+const resetNewEvaluationCallback: SingleAgentCallback = async (context) => {
   if (!context || !context.state) {
     return undefined;
   }
@@ -76,7 +76,7 @@ export const rootAgent = new LlmAgent({
   model,
   description:
     'The primary orchestrator agent that manages user interaction and controls the evaluation lifecycle for AI agent architectural suitability.',
-  beforeAgentCallback,
+  beforeAgentCallback: resetNewEvaluationCallback,
   instruction: `
     1. Ask the user to write a project description.
     2. Evaluate the user's input. If the input is nonsensical, too brief, or clearly does not describe a software, business, or AI project (e.g., "apple and orange", "hello"), politely explain why it is invalid and ask them to provide a proper description. Do NOT proceed to the next step.
