@@ -36,6 +36,9 @@ export const validateDecisionTool = new FunctionTool({
 const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
   // If we already have a valid decision (e.g., from a previous loop iteration), stop the loop.
   const { decision } = getEvaluationContext(context);
+
+  console.log(`beforeModelCallback: Agent ${context.agentName} validated verdict is None before calling LLM.`);
+
   if (decision && decision.verdict !== 'None') {
     return {
       content: {
@@ -79,7 +82,7 @@ const resetAttemptsCallback = (context: Context) => {
   }
 
   context.state.set(VALIDATION_ATTEMPTS_KEY, 0);
-  console.log('Initialized VALIDATION_ATTEMPTS to 0 in beforeAgentCallback');
+  console.log(`beforeAgentCallback: Agent ${context.agentName} initialized ${VALIDATION_ATTEMPTS_KEY} to 0.`);
 
   return undefined;
 };

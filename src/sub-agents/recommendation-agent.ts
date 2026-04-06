@@ -11,6 +11,10 @@ const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
   const { isCompleted } = isProjectDetailsFilled(project);
   const isDecisionNone = decision && decision.verdict === 'None';
 
+  console.log(
+    `beforeModelCallback: Agent ${context.agentName} validated project breakdown, anti-patterns, and decision before calling LLM.`,
+  );
+
   if (isCompleted && antiPatterns && decision && decision.verdict !== 'None') {
     return undefined;
   } else if (!isCompleted && isDecisionNone) {

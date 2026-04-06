@@ -9,6 +9,10 @@ const beforeModelCallback: BeforeModelCallback = async ({ context }) => {
   const { project } = getEvaluationContext(context);
   const { isCompleted } = isProjectDetailsFilled(project);
 
+  console.log(
+    `beforeModelCallback: Agent ${context.agentName} validated project breakdown in valid before calling LLM`,
+  );
+
   // When the project breakdown is incomplete, we cannot determine the anti-patterns
   if (!isCompleted) {
     return {

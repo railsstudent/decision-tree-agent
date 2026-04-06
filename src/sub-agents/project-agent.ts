@@ -47,6 +47,10 @@ const beforeModelCallback: BeforeModelCallback = ({ context }) => {
   const { project } = getEvaluationContext(context);
   const { isCompleted } = isProjectDetailsFilled(project);
 
+  console.log(
+    `beforeModelCallback: Agent ${context.agentName} validated any missing field in the project breakdown before calling LLM.`,
+  );
+
   if (isCompleted) {
     return {
       content: {

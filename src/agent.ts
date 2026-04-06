@@ -64,7 +64,9 @@ const beforeAgentCallback: BeforeAgentCallback = async (context) => {
   state.set(MERGED_RESULTS_KEY, null);
   state.set(VALIDATION_ATTEMPTS_KEY, 0);
 
-  console.log('Session state has been reset for a new evaluation cycle.');
+  console.log(
+    `beforeAgentCallback: Agent ${context.agentName} has reset the session state for a new evaluation cycle.`,
+  );
 
   return undefined;
 };
