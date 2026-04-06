@@ -6,4 +6,4 @@ export const PROJECT_KEY = 'project';
 export const ANTI_PATTERNS_KEY = 'antiPatterns';
 export const MERGED_RESULTS_KEY = 'mergedResults';
 export const PROJECT_DESCRIPTION_KEY = 'project_description';
-export const VALIDATION_ATTEMPTS_KEY = 'validation_atttempts';
+export const VALIDATION_ATTEMPTS_KEY = 'validation_attempts';
