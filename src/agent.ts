@@ -26,7 +26,7 @@ const prepareEvaluationTool = new FunctionTool({
   parameters: z.object({
     description: z.string().describe('The validated project description from the user.'),
   }),
-  execute: async ({ description }, context) => {
+  execute: ({ description }, context) => {
     if (!context || !context.state) {
       return { status: 'ERROR', message: 'No session state found.' };
     }

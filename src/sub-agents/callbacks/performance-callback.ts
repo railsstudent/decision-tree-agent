@@ -1,4 +1,4 @@
-import { AfterAgentCallback, SingleAgentCallback } from '@google/adk';
+import { SingleAgentCallback } from '@google/adk';
 
 export const START_TIME_KEY = 'start_time';
 
@@ -11,7 +11,7 @@ export const agentStartCallback: SingleAgentCallback = (context) => {
   return undefined;
 };
 
-export const agentEndCallback: AfterAgentCallback = (context) => {
+export const agentEndCallback: SingleAgentCallback = (context) => {
   if (!context || !context.state) {
     return undefined;
   }
