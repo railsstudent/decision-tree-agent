@@ -8,6 +8,7 @@ import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
 
 const projectAfterToolCallback = createAfterToolCallback(
   `STOP processing immediately. Max validation attempts reached. Return the most accurate data found so far or empty strings if none.`,
+  PROJECT_KEY,
 );
 
 export const validateProjectTool = new FunctionTool({
@@ -37,12 +38,27 @@ export const validateProjectTool = new FunctionTool({
 
     return {
       status: 'SUCCESS',
+      finalizedData: { task, problem, goal, constraint },
       message: 'Project breakdown is successful, you can now return the final output schema and finish.',
     };
   },
 });
 
 const beforeModelCallback: SingleBeforeModelCallback = ({ context }) => {
+  if (context?.state?.get(`${PROJECT_KEY}_FAILED`)) {
+    console.log('Validation permanently failed. Terminating agent with fallback data.');
+    return {
+      content: {
+        role: 'model',
+        parts: [
+          {
+            text: JSON.stringify({ task: '', problem: '', goal: '', constraint: '' }),
+          },
+        ],
+      },
+    };
+  }
+
   // If we already have a valid project breakdown (e.g., from a previous loop iteration), stop the loop.
   const { project } = getEvaluationContext(context);
   const { isCompleted } = isProjectDetailsFilled(project);

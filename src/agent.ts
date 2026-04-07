@@ -10,7 +10,6 @@ import {
   PROJECT_DESCRIPTION_KEY,
   PROJECT_KEY,
   RECOMMENDATION_KEY,
-  VALIDATION_ATTEMPTS_KEY,
 } from './sub-agents/output-keys.const.js';
 
 process.loadEnvFile();
@@ -62,7 +61,6 @@ const resetNewEvaluationCallback: SingleAgentCallback = (context) => {
   state.set(AUDIT_TRAIL_KEY, null);
   state.set(CLOUD_STORAGE_KEY, null);
   state.set(MERGED_RESULTS_KEY, null);
-  state.set(VALIDATION_ATTEMPTS_KEY, 0);
 
   console.log(
     `beforeAgentCallback: Agent ${context.agentName} has reset the session state for a new evaluation cycle.`,
