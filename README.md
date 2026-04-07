@@ -8,6 +8,7 @@ An AI Agent Architectural Suitability Evaluator built with the [ADK TypeScript S
 - **npm** (comes with Node.js)
 - **Docker and Docker Compose** (for MailHog testing)
 - A Google Cloud Project (for Vertex AI) or a Gemini API Key.
+- **IAM Requirement:** If using Google Cloud Project, ensure the Compute Engine default service account (or the service account you are using) has the **Vertex AI User** role.
 
 ## Installation
 
@@ -33,13 +34,12 @@ An AI Agent Architectural Suitability Evaluator built with the [ADK TypeScript S
    ```
 
    Edit `.env` and provide your configuration:
-   - `GEMINI_MODEL_NAME`: The model to use (e.g., `gemini-3-flash-preview`).
-   - Provide `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, and set `GOOGLE_GENAI_USE_VERTEXAI=TRUE`.
-   - Ensure the Default compute service account of the project has Vertex AI User role.
+   - `GEMINI_MODEL_NAME`: The model to use (e.g., `gemini-3.1-flash-lite-preview`).
+   - Provide `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION` (e.g., `us-central1`), and set `GOOGLE_GENAI_USE_VERTEXAI=TRUE` if using Vertex AI.
 
 ## Running the Agent
 
-The agent can be executed in two modes using the ADK DevTools.
+The agent can be executed in different modes using the ADK DevTools.
 
 ### 1. Web Mode (Recommended)
 
@@ -58,6 +58,16 @@ Run the agent directly in your terminal for a text-based interaction.
 ```bash
 npm run cli
 ```
+
+### 3. API Server Mode
+
+Start a local API server to interact with the agent programmatically.
+
+```bash
+npm run serve
+```
+
+Once started, the server is typically accessible at `http://127.0.0.1:8000`.
 
 ## Testing with MailHog
 
@@ -104,8 +114,15 @@ graph TD
         PA --> APA[AntiPatternsAgent]
         APA --> DTA[DecisionTreeAgent]
         DTA --> RA[RecommendationAgent]
-        RA --> AUA[AuditAndUploadAgents]
-        AUA --> MA[MergerAgent]
+        RA --> PARA[ParallelAuditReportAgent]
+
+        subgraph Parallel Operations
+            PARA --> ATA[AuditTrailAgent]
+            PARA --> CSA[CloudStorageAgent]
+        end
+
+        ATA --> MA[MergerAgent]
+        CSA --> MA
         MA --> EA[EmailAgent]
     end
 
@@ -118,16 +135,28 @@ graph TD
   - **AntiPatternsAgent**: Identifies potential architectural pitfalls.
   - **DecisionTreeAgent**: Applies core logic to determine agent suitability.
   - **RecommendationAgent**: Generates the final architectural strategy.
-  - **AuditAndUploadAgents**: Handles logging and persistence.
+  - **ParallelAuditReportAgent**: Orchestrates concurrent execution of:
+    - **AuditTrailAgent**: Validates and formats evaluation session data.
+    - **CloudStorageAgent**: Manages secure generation and upload of reports to cloud storage.
   - **MergerAgent**: Consolidates all outputs into a final JSON report.
   - **EmailAgent**: Sends the finalized JSON report to the administrator via a configured SMTP server.
+
+## Advanced Features: Callbacks
+
+The ADK SDK's callback functionality is heavily utilized for observability and robustness:
+
+- **Performance Tracking**: Agents implement `agentStartCallback` and `agentEndCallback` to measure and log their execution latency.
+- **Validation Retry Logic**: The system uses `AfterToolCallback` specifically for complex extraction agents (like `ProjectAgent` and `DecisionAgent`). This callback intercepts the LLM's tool calls and tracks the number of validation attempts. If an agent struggles to extract valid data within a defined maximum number of iterations, the callback forces the LLM to terminate with a `FATAL_ERROR` and proceed with the best data found so far, preventing infinite generation loops.
 
 ## Available Scripts
 
 - `npm run build`: Compiles the TypeScript code to JavaScript in the `dist/` directory.
 - `npm run cli`: Builds and executes the agent in CLI mode.
 - `npm run web`: Builds and executes the agent in Web mode via ADK DevTools.
+- `npm run serve`: Starts the ADK DevTools API server.
+- `npm run test`: Runs the Jest test suite.
 - `npm run lint`: Checks for code style and potential errors.
+- `npm run lint:fix`: Automatically fixes fixable linting errors.
 - `npm run format`: Automatically formats the codebase using Prettier.
 
 ## License
