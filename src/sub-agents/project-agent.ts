@@ -4,7 +4,9 @@ import { agentEndCallback, agentStartCallback } from './callbacks/performance-ca
 import { PROJECT_KEY } from './output-keys.const.js';
 import { generateProjectBreakdownPrompt } from './prompts/project.prompt.js';
 import { projectSchema } from './types/index.js';
-import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
+import { generateFailedStateKey, getEvaluationContext, isProjectDetailsFilled } from './utils.js';
+
+const failedKey = generateFailedStateKey(PROJECT_KEY);
 
 const projectAfterToolCallback = createAfterToolCallback(
   `STOP processing immediately. Max validation attempts reached. Return the most accurate data found so far or empty strings if none.`,
@@ -45,7 +47,7 @@ export const validateProjectTool = new FunctionTool({
 });
 
 const beforeModelCallback: SingleBeforeModelCallback = ({ context }) => {
-  if (context?.state?.get(`${PROJECT_KEY}_FAILED`)) {
+  if (context?.state?.get(failedKey)) {
     console.log('Validation permanently failed. Terminating agent with fallback data.');
     return {
       content: {
@@ -89,7 +91,7 @@ export function createProjectAgent(model: string) {
     model,
     description:
       'Analyzes the user-provided project description to extract and structure its core components, including the primary task, underlying problem, ultimate goal, and architectural constraints.',
-    beforeAgentCallback: agentStartCallback,
+    beforeAgentCallback: agentStartCallback(failedKey),
     beforeModelCallback,
     instruction: (context) => {
       const { projectDescription } = getEvaluationContext(context);

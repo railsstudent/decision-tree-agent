@@ -92,3 +92,7 @@ export function getMergerContext(context: ReadonlyContext | undefined) {
     merger: state.get<Merger>(MERGED_RESULTS_KEY) ?? null,
   };
 }
+
+export function generateFailedStateKey(stateKey: string) {
+  return `${stateKey}_FAILED`;
+}

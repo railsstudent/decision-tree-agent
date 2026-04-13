@@ -36,7 +36,7 @@ export function createAnitPatternsAgent(model: string) {
     model,
     description:
       'Evaluates the project against known architectural anti-patterns to determine if it is better suited for traditional automation, direct API calls, or simple retrieval systems instead of an AI agent.',
-    beforeAgentCallback: agentStartCallback,
+    beforeAgentCallback: agentStartCallback(),
     beforeModelCallback,
     instruction: (context) => {
       const { project } = getEvaluationContext(context);

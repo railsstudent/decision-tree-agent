@@ -11,7 +11,7 @@ export function createMergerAgent(model: string) {
     model,
     description:
       'Aggregates the asynchronous results from the audit trail, cloud storage, and recommendation phases into a cohesive, schema-validated JSON response for the user.',
-    beforeAgentCallback: agentStartCallback,
+    beforeAgentCallback: agentStartCallback(),
     instruction: (context) => {
       const { auditTrail, recommendation, cloudStorage } = getAggregateContext(context);
       return generateMergerPrompt(recommendation, auditTrail, cloudStorage);

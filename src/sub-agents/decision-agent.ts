@@ -4,7 +4,9 @@ import { agentEndCallback, agentStartCallback } from './callbacks/performance-ca
 import { DECISION_KEY } from './output-keys.const.js';
 import { generateDecisionPrompt } from './prompts/decision.prompt.js';
 import { decisionSchema } from './types/index.js';
-import { getEvaluationContext, isProjectDetailsFilled } from './utils.js';
+import { generateFailedStateKey, getEvaluationContext, isProjectDetailsFilled } from './utils.js';
+
+const failedKey = generateFailedStateKey(DECISION_KEY);
 
 const decisionAfterToolCallback = createAfterToolCallback(
   `STOP processing immediately and output the final JSON schema with verdict: "None".`,
@@ -33,7 +35,7 @@ export const validateDecisionTool = new FunctionTool({
 });
 
 const beforeModelCallback: SingleBeforeModelCallback = async ({ context }) => {
-  if (context?.state?.get(`${DECISION_KEY}_FAILED`)) {
+  if (context?.state?.get(failedKey)) {
     console.log('Validation permanently failed. Terminating agent with fallback data.');
     return {
       content: {
@@ -95,7 +97,7 @@ export function createDecisionTreeAgent(model: string) {
     model,
     description:
       'Evaluates the structured project components against the Agent Fundamentals decision tree to determine the optimal architectural solution (e.g., Use Agent, Use LLM, Use Workflow Automation, or Use Simple API).',
-    beforeAgentCallback: agentStartCallback,
+    beforeAgentCallback: agentStartCallback(failedKey),
     beforeModelCallback,
     instruction: (context) => {
       const { project, antiPatterns } = getEvaluationContext(context);

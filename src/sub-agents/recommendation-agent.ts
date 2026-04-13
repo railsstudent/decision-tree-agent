@@ -50,7 +50,7 @@ export function createRecommendationAgent(model: string) {
     description:
       'Synthesizes the extracted project components, identified anti-patterns, and decision tree verdict into a comprehensive architectural recommendation report.',
     beforeModelCallback,
-    beforeAgentCallback: agentStartCallback,
+    beforeAgentCallback: agentStartCallback(),
     instruction: (context) => {
       const { project, antiPatterns, decision } = getEvaluationContext(context);
       const { isCompleted, missingFields } = isProjectDetailsFilled(project);
