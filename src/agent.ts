@@ -1,4 +1,4 @@
-import { FunctionTool, LlmAgent, SequentialAgent, SingleAgentCallback } from '@google/adk';
+import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
 import { initWorkflowAgent } from './init.js';
 import {
@@ -30,6 +30,14 @@ const prepareEvaluationTool = new FunctionTool({
       return { status: 'ERROR', message: 'No session state found.' };
     }
 
+    context.state.set(PROJECT_KEY, null);
+    context.state.set(ANTI_PATTERNS_KEY, null);
+    context.state.set(DECISION_KEY, null);
+    context.state.set(RECOMMENDATION_KEY, null);
+    context.state.set(AUDIT_TRAIL_KEY, null);
+    context.state.set(CLOUD_STORAGE_KEY, null);
+    context.state.set(MERGED_RESULTS_KEY, null);
+
     // Set the new description for the ProjectAgent to find
     context.state.set(PROJECT_DESCRIPTION_KEY, description);
 
@@ -46,35 +54,11 @@ export const sequentialEvaluationAgent = new SequentialAgent({
     `,
 });
 
-const resetNewEvaluationCallback: SingleAgentCallback = (context) => {
-  if (!context || !context.state) {
-    return undefined;
-  }
-
-  const state = context.state;
-
-  // Clear all previous evaluation data
-  state.set(PROJECT_KEY, null);
-  state.set(ANTI_PATTERNS_KEY, null);
-  state.set(DECISION_KEY, null);
-  state.set(RECOMMENDATION_KEY, null);
-  state.set(AUDIT_TRAIL_KEY, null);
-  state.set(CLOUD_STORAGE_KEY, null);
-  state.set(MERGED_RESULTS_KEY, null);
-
-  console.log(
-    `beforeAgentCallback: Agent ${context.agentName} has reset the session state for a new evaluation cycle.`,
-  );
-
-  return undefined;
-};
-
 export const rootAgent = new LlmAgent({
   name: 'ProjectEvaluationAgent',
   model,
   description:
     'The primary orchestrator agent that manages user interaction and controls the evaluation lifecycle for AI agent architectural suitability.',
-  beforeAgentCallback: resetNewEvaluationCallback,
   instruction: `
     1. Ask the user to write a project description.
     2. Evaluate the user's input. If the input is nonsensical, too brief, or clearly does not describe a software, business, or AI project (e.g., "apple and orange", "hello"), politely explain why it is invalid and ask them to provide a proper description. Do NOT proceed to the next step.
