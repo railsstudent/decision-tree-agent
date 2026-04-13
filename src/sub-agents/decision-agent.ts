@@ -75,7 +75,6 @@ const beforeModelCallback: SingleBeforeModelCallback = async ({ context }) => {
   }
 
   // Short-circuit if project is incomplete, and escalate to break the loop.
-  // context.actions.escalate = true;
   return {
     content: {
       role: 'model',
