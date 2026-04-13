@@ -1,6 +1,7 @@
 import { FunctionTool, LlmAgent, SequentialAgent } from '@google/adk';
 import { z } from 'zod';
 import { initWorkflowAgent } from './init.js';
+import { agentStartCallback } from './sub-agents/callbacks/performance-callback.js';
 import {
   ANTI_PATTERNS_KEY,
   AUDIT_TRAIL_KEY,
@@ -67,6 +68,7 @@ export const rootAgent = new LlmAgent({
         b. Execute 'SequentialEvaluationAgent'.
     4. Return the final result in JSON format.
     `,
+  beforeAgentCallback: agentStartCallback(),
   tools: [prepareEvaluationTool],
   subAgents: [sequentialEvaluationAgent],
 });
